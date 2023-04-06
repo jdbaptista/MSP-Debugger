@@ -4,7 +4,20 @@
     "active_layer_preset": "All Layers",
     "auto_track_width": true,
     "hidden_netclasses": [],
-    "hidden_nets": [],
+    "hidden_nets": [
+      "GND",
+      "/TCK",
+      "/TMS",
+      "/TDI",
+      "/TDO",
+      "/RST",
+      "/TEST",
+      "/RET SW",
+      "/SET SW",
+      "/UP SW",
+      "/LCD RS",
+      "/LCD R{slash}W"
+    ],
     "high_contrast_mode": 0,
     "net_color_mode": 1,
     "opacity": {
