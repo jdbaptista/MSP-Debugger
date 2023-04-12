@@ -4,5 +4,6 @@
   "idf.port": "/dev/cu.usbserial-01D9697C",
   "files.associations": {
     "freertos.h": "c"
-  }
+  },
+  "idf.adapterTargetName": "esp32"
 }
