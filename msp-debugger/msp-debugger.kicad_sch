@@ -2358,7 +2358,7 @@
   (symbol (lib_id "Switch:SW_MEC_5E") (at 172.5168 40.9956 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no) (fields_autoplaced)
     (uuid 3cc7d626-b358-46cd-bb83-3abe1655508d)
-    (property "Reference" "SW6" (at 172.5168 31.75 0)
+    (property "Reference" "ESP_PROGRAM1" (at 172.5168 31.75 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "222ADVBA" (at 172.5168 34.29 0)
@@ -2377,7 +2377,7 @@
     (instances
       (project "msp-debugger"
         (path "/045ba461-bcb4-4373-9dc5-687bfd2826ef"
-          (reference "SW6") (unit 1)
+          (reference "ESP_PROGRAM1") (unit 1)
         )
       )
     )
@@ -2552,7 +2552,7 @@
   (symbol (lib_id "Switch:SW_MEC_5E") (at 137.2108 40.9956 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no) (fields_autoplaced)
     (uuid 5f79caf7-006c-4bc9-bca0-616ff5df2925)
-    (property "Reference" "SW5" (at 137.2108 31.75 0)
+    (property "Reference" "ESP_ENABLE1" (at 137.2108 31.75 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "222ADVBA" (at 137.2108 34.29 0)
@@ -2571,7 +2571,7 @@
     (instances
       (project "msp-debugger"
         (path "/045ba461-bcb4-4373-9dc5-687bfd2826ef"
-          (reference "SW5") (unit 1)
+          (reference "ESP_ENABLE1") (unit 1)
         )
       )
     )
@@ -2607,7 +2607,7 @@
   (symbol (lib_id "Switch:SW_MEC_5E") (at 183.1086 103.632 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no) (fields_autoplaced)
     (uuid 62c3d15b-9151-4b01-96e7-0897a6039313)
-    (property "Reference" "SW3" (at 183.1086 93.98 0)
+    (property "Reference" "UP1" (at 183.1086 93.98 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "222ADVBA" (at 183.1086 96.52 0)
@@ -2626,7 +2626,7 @@
     (instances
       (project "msp-debugger"
         (path "/045ba461-bcb4-4373-9dc5-687bfd2826ef"
-          (reference "SW3") (unit 1)
+          (reference "UP1") (unit 1)
         )
       )
     )
@@ -2933,7 +2933,7 @@
   (symbol (lib_id "Switch:SW_MEC_5E") (at 183.2356 82.677 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no) (fields_autoplaced)
     (uuid 9a2a25a7-0721-4469-8145-1f339309087f)
-    (property "Reference" "SW1" (at 183.2356 73.66 0)
+    (property "Reference" "SET1" (at 183.2356 73.66 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "222ADVBA" (at 183.2356 76.2 0)
@@ -2952,7 +2952,7 @@
     (instances
       (project "msp-debugger"
         (path "/045ba461-bcb4-4373-9dc5-687bfd2826ef"
-          (reference "SW1") (unit 1)
+          (reference "SET1") (unit 1)
         )
       )
     )
@@ -3056,7 +3056,7 @@
   (symbol (lib_id "Switch:SW_MEC_5E") (at 183.2356 92.964 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no) (fields_autoplaced)
     (uuid adca43e1-2072-432c-bb1a-f94e408d6cfd)
-    (property "Reference" "SW2" (at 183.2356 83.82 0)
+    (property "Reference" "RETURN1" (at 183.2356 83.82 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "222ADVBA" (at 183.2356 86.36 0)
@@ -3075,7 +3075,7 @@
     (instances
       (project "msp-debugger"
         (path "/045ba461-bcb4-4373-9dc5-687bfd2826ef"
-          (reference "SW2") (unit 1)
+          (reference "RETURN1") (unit 1)
         )
       )
     )
@@ -3184,7 +3184,7 @@
   (symbol (lib_id "Switch:SW_MEC_5E") (at 183.1086 114.554 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no) (fields_autoplaced)
     (uuid dec75034-97c0-47dc-b53e-8ae72fa06d75)
-    (property "Reference" "SW4" (at 183.1086 105.41 0)
+    (property "Reference" "DOWN1" (at 183.1086 105.41 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "222ADVBA" (at 183.1086 107.95 0)
@@ -3203,7 +3203,7 @@
     (instances
       (project "msp-debugger"
         (path "/045ba461-bcb4-4373-9dc5-687bfd2826ef"
-          (reference "SW4") (unit 1)
+          (reference "DOWN1") (unit 1)
         )
       )
     )
