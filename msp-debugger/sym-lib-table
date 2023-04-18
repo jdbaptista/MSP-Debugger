@@ -151,5 +151,5 @@
   (lib (name "dk_TVS-Diodes")(type "KiCad")(uri "${KIPRJMOD}/digikey-kicad-library-master/digikey-symbols/dk_TVS-Diodes.kicad_sym")(options "")(descr ""))
   (lib (name "dk_TVS-Mixed-Technology")(type "KiCad")(uri "${KIPRJMOD}/digikey-kicad-library-master/digikey-symbols/dk_TVS-Mixed-Technology.kicad_sym")(options "")(descr ""))
   (lib (name "dk_USB-DVI-HDMI-Connectors")(type "KiCad")(uri "${KIPRJMOD}/digikey-kicad-library-master/digikey-symbols/dk_USB-DVI-HDMI-Connectors.kicad_sym")(options "")(descr ""))
-  (lib (name "Espressif")(type "KiCad")(uri "${KIPRJMOD}/espressif-lib/libraries/Espressif.kicad_sym")(options "")(descr ""))
+  (lib (name "Espressif")(type "KiCad")(uri "${KIPRJMOD}/espressif-library/libraries/Espressif.kicad_sym")(options "")(descr ""))
 )
