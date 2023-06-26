@@ -1,0 +1,5 @@
+[1/4] cmd.exe /C "cd /D C:\Users\bapti\Documents\esp-sketches\jtag_implementation\build\esp-idf\esptool_py && C:\Espressif\python_env\idf5.0_py3.8_env\Scripts\python.exe C:/Espressif/frameworks/esp-idf-v5.0.1/components/partition_table/check_sizes.py --offset 0x8000 partition --type app C:/Users/bapti/Documents/esp-sketches/jtag_implementation/build/partition_table/partition-table.bin C:/Users/bapti/Documents/esp-sketches/jtag_implementation/build/jtag_implementation.bin"
+jtag_implementation.bin binary size 0x29350 bytes. Smallest app partition is 0x100000 bytes. 0xd6cb0 bytes (84%) free.
+[2/4] Performing build step for 'bootloader'
+[1/1] cmd.exe /C "cd /D C:\Users\bapti\Documents\esp-sketches\jtag_implementation\build\bootloader\esp-idf\esptool_py && C:\Espressif\python_env\idf5.0_py3.8_env\Scripts\python.exe C:/Espressif/frameworks/esp-idf-v5.0.1/components/partition_table/check_sizes.py --offset 0x8000 bootloader 0x1000 C:/Users/bapti/Documents/esp-sketches/jtag_implementation/build/bootloader/bootloader.bin"
+Bootloader binary size 0x5430 bytes. 0x1bd0 bytes (25%) free.
