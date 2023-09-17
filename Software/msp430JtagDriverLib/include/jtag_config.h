@@ -20,12 +20,13 @@
 #define JTAGDIR     (P2DIR)     // port direction
 #define JTAGIN      (P2IN)      // port input
 #define JTAGOUT     (P2OUT)     // port output
-#define RST         (0x01)      // Target MSP430 reset (0)
-#define TMS         (0x04)      // JTAG FSM control    (2)
-#define TCK         (0x08)      // JTAG clock input    (3)
-#define TDI         (0x10)      // JTAG data input and TCLK input (4)
-#define TDO         (0x20)      // JTAG data output (5)
-#define TEST        (0x40)      // JTAG enable pins (6)
+#define JTAGREN     (P2REN)     // port resistor enable
+#define RST         (0x01)      // Target MSP430 reset (0) (16)
+#define TMS         (0x04)      // JTAG FSM control    (2) (7)
+#define TCK         (0x08)      // JTAG clock input    (3) (6)
+#define TDI         (0x10)      // JTAG data input and TCLK input (4) (14)
+#define TDO         (0x20)      // JTAG data output (5) (15)
+#define TEST        (0x40)      // JTAG enable pins (6) (17)
 
 /*
  * JTAG Instruction Codes
@@ -45,37 +46,44 @@ const uint8_t IR_Prepare_Blow = 0x22;
 const uint8_t IR_Ex_Blow = 0x24;
 const uint8_t IR_JMB_EXCHANGE = 0x61;
 
-/*
- * Clocks port.pin.
- */
-volatile inline void clock(int port, int pin) {
-    port &= ~pin;
-    port |= pin;
-}
 
-volatile inline void delay() {
-    uint32_t timer = 0xFFFFFFFF;
+volatile void delay() {
+    volatile uint16_t timer = 0xF;
     while (timer != 0) {
         timer--;
     }
 }
 
-volatile inline void slowClock(int port, int pin) {
-    port &= ~pin;
-    delay();
-    port |= pin;
-    delay();
+/*
+ * Clocks port.pin.
+ */
+volatile inline void clock(volatile uint8_t* port, int pin) {
+    *port &= ~pin;
+    *port |= pin;
+}
+
+
+/*
+ * Has a total period of 2 * 7.62microseconds, which satisfies
+ * the fuse check time of 5microseconds.
+ */
+volatile inline void slowClock(volatile uint8_t* port, int pin) {
+    *port &= ~pin;
+    *port &= ~pin;
+    *port |= pin;
+    *port |= pin;
+
 }
 
 /*
  * Sets port.pin high if value is true (1) and
  * low if value is false (0).
  */
-volatile inline void setLevel(int port, int pin, int value) {
+volatile void setLevel(volatile uint8_t* port, int pin, uint16_t value) {
     if (value) {
-        port |= pin;
+        *port |= pin;
     } else {
-        port &= ~pin;
+        *port &= ~pin;
     }
 }
 
