@@ -25,7 +25,7 @@
  * Returns: 0 if FSM is put in the IDLE state successfully,
  *          1 if FSM failed fuse check or an error occurred.
  */
-inline int initFSM();
+int initFSM();
 
 /*
  * Shifts an 8-bit JTAG instruction into the JTAG instruction register (IR).
@@ -45,5 +45,14 @@ uint8_t IR_SHIFT(uint8_t input_data);
  */
 uint16_t DR_SHIFT(uint16_t input_data);
 
+/*
+ * Sets TCLK to 1
+ */
+inline void setTCLK();
+
+/*
+ * Sets TCLK to 0
+ */
+inline void clrTCLK();
 
 #endif /* JTAG_FSM_H_ */

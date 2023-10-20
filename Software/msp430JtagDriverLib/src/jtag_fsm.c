@@ -11,7 +11,7 @@
 #include "jtag_fsm.h"
 #include "jtag_config.h"
 
-inline int initFSM() {
+int initFSM() {
     // configure JTAG GPIO pins
     JTAGDIR = 0xFF;  // Begin with all pins set to output
     JTAGDIR &= ~TDO; // Set TDO to input
@@ -167,4 +167,12 @@ uint16_t DR_SHIFT(uint16_t input_data) {
     }
 
     return output_data;
+}
+
+inline void setTCLK() {
+    JTAGOUT |= TCK;
+}
+
+inline void clrTCLK() {
+    JTAGOUT &= ~TCK;
 }
