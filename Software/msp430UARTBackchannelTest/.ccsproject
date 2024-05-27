@@ -9,6 +9,8 @@
 	<codegenToolVersion value="21.6.1.LTS"/>
 	<isElfFormat value="true"/>
 	<connection value="common/targetdb/connections/TIMSP430-USB.xml"/>
+	<linkerCommandFile value="lnk_msp430f5529.cmd"/>
+	<rts value="rts430x_lc_sd_eabi.lib"/>
 	<createSlaveProjects value=""/>
 	<templateProperties value="id=com.ti.common.project.core.emptyProjectWithMainTemplate_msp430"/>
 	<filesToOpen value="main.c"/>
