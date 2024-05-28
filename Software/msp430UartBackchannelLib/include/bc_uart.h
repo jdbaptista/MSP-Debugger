@@ -30,8 +30,8 @@ inline void clear_uart_rx_interrupt_flag(void);
 bool uart_send_char(char input);
 
 #ifdef USE_BC_IRQ
-bool uart_send_string(char *input);
-void handle_bc_uart_irq(void);
+bool print(char *input);
+void wait_print(char *input);
 #endif
 
 

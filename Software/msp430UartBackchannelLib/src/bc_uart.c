@@ -147,7 +147,7 @@ interrupt void bc_uart_irq(void) {
  * If the buffer is too small for the input, transmits only a
  * portion of the input.
  */
-bool uart_send_string(char *input) {
+bool print(char *input) {
     unsigned char reset_high = BCCTL1 & UCSWRST;
     if (curr_bc_buffer_ndx != -1 || reset_high) {
         return 0; // transmission already in progress or peripheral off.
@@ -166,6 +166,13 @@ bool uart_send_string(char *input) {
     BCTXBUF = bc_buffer[0];
 
     return 1;
+}
+
+/***
+ * Polls the backchannel until done transmitting.
+ */
+inline void wait_print(char *input) {
+    while (!print(input)) {}
 }
 
 #endif
