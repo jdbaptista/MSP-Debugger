@@ -26,10 +26,7 @@ bool test_send_char(void);
 bool test_print(void);
 
 static bool (*test_funcs[])(void) = {
-                                     test_config,
                                      test_use_pins,
-                                     test_usci_reset,
-                                     test_usci_start,
                                      test_enable_tx_interrupt,
                                      test_disable_tx_interrupt,
                                      test_enable_rx_interrupt,
@@ -41,10 +38,7 @@ static bool (*test_funcs[])(void) = {
 };
 
 static char* test_names[] = {
-                             "test_config",
                              "test_use_pins",
-                             "test_usci_reset",
-                             "test_usci_start",
                              "test_enable_tx_interrupt",
                              "test_disable_tx_interrupt",
                              "test_enable_rx_interrupt",

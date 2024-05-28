@@ -1,24 +1,43 @@
+#include <bc_uart.h>
 #include <msp430.h>
-#include <jtag_fsm.h>
-#include <stdlib.h>
-#include <stdint.h>
 #include <stdbool.h>
+#include "tests/fsm_tests.h" // CHANGE THIS LINE TO RUN DIFFERENT TESTS
 
+/***
+ * This test file is special because it tests
+ * the backchannel UART library. That is, it
+ * will not state anything to the serial monitor
+ * if it is not working! If so, debug the wait_print
+ * function inside setup().
+ ***/
+
+/***
+ * Things may not work here, but there is no
+ * way to tell the user if they don't other
+ * than figuring it out through debugging.
+ */
+inline void setup() {
+    WDTCTL = WDTPW | WDTHOLD; // stop watchdog timer
+    // setup backchannel at 9600 baud
+    usci_reset();
+    // source UCSI from SMCLK
+    BCCTL1 |= UCSSEL__SMCLK;
+    use_bc_uart_pins();
+    uart_config();
+    usci_start();
+    enable_uart_tx_interrupt();
+    clear_uart_tx_interrupt_flag();
+    __bis_SR_register(GIE);
+    wait_print("\033[2J"); // clear screen command
+    wait_print("\033[H"); // home cursor command
+}
 
 /**
  * main.c
  */
 int main(void)
 {
-    WDTCTL = WDTPW | WDTHOLD;   // stop watchdog timer
-
-    volatile uint8_t output8;
-    volatile uint16_t output16;
-    while (true) {
-        initFSM();
-        output8 = IR_SHIFT((uint8_t) 0x55);
-        output16 = DR_SHIFT((uint16_t) 0xdead);
-        output16 = DR_SHIFT((uint16_t) 0xbeef);
-        output16 = DR_SHIFT((uint16_t) 0x0000);
-    }
+    setup();
+    run_tests();
+    return 0;
 }

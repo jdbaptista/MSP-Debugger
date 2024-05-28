@@ -175,4 +175,11 @@ inline void wait_print(char *input) {
     while (!print(input)) {}
 }
 
+/**
+ * Polls the backchannel until done transmitting
+ */
+void uart_wait(void) {
+    while (curr_bc_buffer_ndx != -1) {}
+}
+
 #endif

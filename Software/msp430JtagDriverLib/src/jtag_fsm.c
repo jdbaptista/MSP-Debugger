@@ -42,7 +42,7 @@ int initFSM() {
     slowClock(&JTAGOUT, TMS);
     JTAGOUT &= ~TMS;
 
-    return 0;
+    return 1;
 }
 
 uint8_t IR_SHIFT(uint8_t input_data) {

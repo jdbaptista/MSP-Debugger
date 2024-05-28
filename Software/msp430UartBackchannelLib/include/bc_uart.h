@@ -32,6 +32,7 @@ bool uart_send_char(char input);
 #ifdef USE_BC_IRQ
 bool print(char *input);
 void wait_print(char *input);
+void uart_wait(void);
 #endif
 
 

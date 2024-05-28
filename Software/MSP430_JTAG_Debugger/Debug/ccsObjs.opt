@@ -2,5 +2,4 @@
 "../lnk_msp430f5529.cmd"
 -llibmath.a
 -l"C:/Users/bapti/Documents/MSP-Debugger/Software/msp430JtagDriverLib/Debug/msp430JtagDriverLib.lib"
--l"C:/Users/bapti/Documents/MSP-Debugger/Software/msp430DisassemblerLib/Debug/msp430DisassemblerLib.lib"
 -llibc.a

@@ -15,7 +15,6 @@ ORDERED_OBJS += \
 $(GEN_CMDS__FLAG) \
 -llibmath.a \
 -l"C:/Users/bapti/Documents/MSP-Debugger/Software/msp430JtagDriverLib/Debug/msp430JtagDriverLib.lib" \
--l"C:/Users/bapti/Documents/MSP-Debugger/Software/msp430DisassemblerLib/Debug/msp430DisassemblerLib.lib" \
 -llibc.a \
 
 -include ../makefile.init
@@ -139,7 +138,7 @@ all: $(OBJS) $(CMD_SRCS) $(GEN_CMDS)
 MSP430_JTAG_Debugger.out: $(OBJS) $(CMD_SRCS) $(GEN_CMDS)
 	@echo 'Building target: "$@"'
 	@echo 'Invoking: MSP430 Linker'
-	"C:/ti/ccs1230/ccs/tools/compiler/ti-cgt-msp430_21.6.1.LTS/bin/cl430" -vmspx --data_model=restricted --use_hw_mpy=F5 --advice:power=all --define=__MSP430F5529__ -g --printf_support=minimal --diag_warning=225 --diag_wrap=off --display_error_number --silicon_errata=CPU21 --silicon_errata=CPU22 --silicon_errata=CPU23 --silicon_errata=CPU40 -z -m"MSP430_JTAG_Debugger.map" --heap_size=160 --stack_size=160 --cinit_hold_wdt=on -i"C:/ti/ccs1230/ccs/ccs_base/msp430/include" -i"C:/Users/bapti/Documents/MSP-Debugger/Software/msp430JtagDriverLib/include" -i"C:/Users/bapti/Documents/MSP-Debugger/Software/msp430DisassemblerLib/include" -i"C:/ti/ccs1230/ccs/ccs_base/msp430/lib/5xx_6xx_FRxx" -i"C:/ti/ccs1230/ccs/tools/compiler/ti-cgt-msp430_21.6.1.LTS/lib" -i"C:/ti/ccs1230/ccs/tools/compiler/ti-cgt-msp430_21.6.1.LTS/include" --reread_libs --diag_wrap=off --display_error_number --warn_sections --xml_link_info="MSP430_JTAG_Debugger_linkInfo.xml" --use_hw_mpy=F5 --rom_model -o "MSP430_JTAG_Debugger.out" $(ORDERED_OBJS)
+	"C:/ti/ccs1230/ccs/tools/compiler/ti-cgt-msp430_21.6.1.LTS/bin/cl430" -vmspx --data_model=restricted --use_hw_mpy=F5 --advice:power=all --define=__MSP430F5529__ -g --printf_support=minimal --diag_warning=225 --diag_wrap=off --display_error_number --silicon_errata=CPU21 --silicon_errata=CPU22 --silicon_errata=CPU23 --silicon_errata=CPU40 -z -m"MSP430_JTAG_Debugger.map" --heap_size=160 --stack_size=160 --cinit_hold_wdt=on -i"C:/ti/ccs1230/ccs/ccs_base/msp430/include" -i"C:/Users/bapti/Documents/MSP-Debugger/Software/msp430JtagDriverLib/include" -i"C:/ti/ccs1230/ccs/ccs_base/msp430/lib/5xx_6xx_FRxx" -i"C:/ti/ccs1230/ccs/tools/compiler/ti-cgt-msp430_21.6.1.LTS/lib" -i"C:/ti/ccs1230/ccs/tools/compiler/ti-cgt-msp430_21.6.1.LTS/include" --reread_libs --diag_wrap=off --display_error_number --warn_sections --xml_link_info="MSP430_JTAG_Debugger_linkInfo.xml" --use_hw_mpy=F5 --rom_model -o "MSP430_JTAG_Debugger.out" $(ORDERED_OBJS)
 	@echo 'Finished building target: "$@"'
 	@echo ' '
 

@@ -4,6 +4,14 @@
 #include "tests/tests.h"
 
 /***
+ * This test file is special because it tests
+ * the backchannel UART library. That is, it
+ * will not state anything to the serial monitor
+ * if it is not working! If so, debug the wait_print
+ * function inside setup().
+ ***/
+
+/***
  * Things may not work here, but there is no
  * way to tell the user if they don't other
  * than figuring it out through debugging.
