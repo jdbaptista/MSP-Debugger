@@ -11,12 +11,11 @@ GEN_CMDS__FLAG :=
 
 ORDERED_OBJS += \
 "./main.obj" \
-"./src/ir_shift_tests.obj" \
 "./tests/fsm_tests.obj" \
 "../lnk_msp430f5529.cmd" \
 $(GEN_CMDS__FLAG) \
 -llibmath.a \
--l"C:/Users/bapti/Documents/MSP-Debugger/Software/msp430UARTBackchannelLib/Debug/msp430UARTBackchannelLib.lib" \
+-lmsp430BackchannelLib.lib \
 -l"C:/Users/bapti/Documents/MSP-Debugger/Software/msp430JtagDriverLib/Debug/msp430JtagDriverLib.lib" \
 -llibc.a \
 
@@ -28,10 +27,8 @@ RMDIR := RMDIR /S/Q
 # All of the sources participating in the build are defined here
 -include sources.mk
 -include subdir_vars.mk
--include src/subdir_vars.mk
 -include tests/subdir_vars.mk
 -include subdir_rules.mk
--include src/subdir_rules.mk
 -include tests/subdir_rules.mk
 -include objects.mk
 
@@ -129,10 +126,10 @@ endif
 
 # Add inputs and outputs from these tool invocations to the build variables 
 EXE_OUTPUTS += \
-msp430JtagDriverTest.out \
+msp430JtagDriverTest.out 
 
 EXE_OUTPUTS__QUOTED += \
-"msp430JtagDriverTest.out" \
+"msp430JtagDriverTest.out" 
 
 
 # All Target
@@ -143,15 +140,15 @@ all: $(OBJS) $(CMD_SRCS) $(GEN_CMDS)
 msp430JtagDriverTest.out: $(OBJS) $(CMD_SRCS) $(GEN_CMDS)
 	@echo 'Building target: "$@"'
 	@echo 'Invoking: MSP430 Linker'
-	"C:/ti/ccs1230/ccs/tools/compiler/ti-cgt-msp430_21.6.1.LTS/bin/cl430" -vmspx --code_model=large --data_model=small --use_hw_mpy=F5 --advice:power=all --define=__MSP430F5529__ -g --printf_support=minimal --diag_warning=225 --diag_wrap=off --display_error_number --silicon_errata=CPU21 --silicon_errata=CPU22 --silicon_errata=CPU23 --silicon_errata=CPU40 -z -m"msp430JtagDriverTest.map" --heap_size=160 --stack_size=160 --cinit_hold_wdt=on -i"C:/ti/ccs1230/ccs/ccs_base/msp430/include" -i"C:/Users/bapti/Documents/MSP-Debugger/Software/msp430UARTBackchannelLib/include" -i"C:/Users/bapti/Documents/MSP-Debugger/Software/msp430JtagDriverLib/include" -i"C:/ti/ccs1230/ccs/ccs_base/msp430/lib/5xx_6xx_FRxx" -i"C:/ti/ccs1230/ccs/tools/compiler/ti-cgt-msp430_21.6.1.LTS/lib" -i"C:/ti/ccs1230/ccs/tools/compiler/ti-cgt-msp430_21.6.1.LTS/include" --reread_libs --diag_wrap=off --display_error_number --warn_sections --xml_link_info="msp430JtagDriverTest_linkInfo.xml" --use_hw_mpy=F5 --rom_model -o "msp430JtagDriverTest.out" $(ORDERED_OBJS)
+	"C:/ti/ccs1230/ccs/tools/compiler/ti-cgt-msp430_21.6.1.LTS/bin/cl430" -vmspx --code_model=large --data_model=restricted --use_hw_mpy=F5 --advice:power=all --define=__MSP430F5529__ -g --printf_support=minimal --diag_warning=225 --diag_wrap=off --display_error_number --silicon_errata=CPU21 --silicon_errata=CPU22 --silicon_errata=CPU23 --silicon_errata=CPU40 -z -m"msp430JtagDriverTest.map" --heap_size=160 --stack_size=160 --cinit_hold_wdt=on -i"C:/Users/bapti/Documents/MSP-Debugger/Software/msp430BackchannelLib/Debug" -i"C:/ti/ccs1230/ccs/ccs_base/msp430/include" -i"C:/Users/bapti/Documents/MSP-Debugger/Software/msp430JtagDriverLib/include" -i"C:/ti/ccs1230/ccs/ccs_base/msp430/lib/5xx_6xx_FRxx" -i"C:/ti/ccs1230/ccs/tools/compiler/ti-cgt-msp430_21.6.1.LTS/lib" -i"C:/ti/ccs1230/ccs/tools/compiler/ti-cgt-msp430_21.6.1.LTS/include" --reread_libs --diag_wrap=off --display_error_number --warn_sections --xml_link_info="msp430JtagDriverTest_linkInfo.xml" --use_hw_mpy=F5 --rom_model -o "msp430JtagDriverTest.out" $(ORDERED_OBJS)
 	@echo 'Finished building target: "$@"'
 	@echo ' '
 
 # Other Targets
 clean:
 	-$(RM) $(EXE_OUTPUTS__QUOTED)
-	-$(RM) "main.obj" "src\ir_shift_tests.obj" "tests\fsm_tests.obj" 
-	-$(RM) "main.d" "src\ir_shift_tests.d" "tests\fsm_tests.d" 
+	-$(RM) "main.obj" "tests\fsm_tests.obj" 
+	-$(RM) "main.d" "tests\fsm_tests.d" 
 	-@echo 'Finished clean'
 	-@echo ' '
 

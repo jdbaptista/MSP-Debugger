@@ -1,7 +1,7 @@
 #include <stdbool.h>
 #include "tests/fsm_tests.h"
-#include "bc_uart.h"
 #include "jtag_fsm.h"
+#include "bc_uart.h"
 
 bool test_init_fsm(void) {
     bool result = initFSM();

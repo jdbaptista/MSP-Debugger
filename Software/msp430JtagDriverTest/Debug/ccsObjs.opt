@@ -1,8 +1,7 @@
 "./main.obj"
-"./src/ir_shift_tests.obj"
 "./tests/fsm_tests.obj"
 "../lnk_msp430f5529.cmd"
 -llibmath.a
--l"C:/Users/bapti/Documents/MSP-Debugger/Software/msp430UARTBackchannelLib/Debug/msp430UARTBackchannelLib.lib"
+-lmsp430BackchannelLib.lib
 -l"C:/Users/bapti/Documents/MSP-Debugger/Software/msp430JtagDriverLib/Debug/msp430JtagDriverLib.lib"
 -llibc.a
