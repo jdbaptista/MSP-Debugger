@@ -24,7 +24,7 @@ int initFSM() {
     clock(&JTAGOUT, TEST); // low->high
     JTAGOUT |= RST;
 
-    // Reset FSM to IDLE in case of faulty fuse check
+    // Reset FSM to IDLE
     JTAGOUT |= TMS;
     int i;
     for (i = 0; i < 7; i++) {
@@ -46,15 +46,6 @@ int initFSM() {
 }
 
 uint8_t IR_SHIFT(uint8_t input_data) {
-    // Reset FSM to IDLE in case of faulty fuse check
-//    JTAGOUT |= TMS;
-//    int i;
-//    for (i = 0; i < 7; i++) {
-//        clock(&JTAGOUT, TCK);    // FSM: TLR
-//    }
-//    JTAGOUT &= ~TMS;
-//    clock(&JTAGOUT, TCK);
-
     uint8_t output_data = 0;
     int prev_TDI = (JTAGOUT & TDI);
 
@@ -68,11 +59,11 @@ uint8_t IR_SHIFT(uint8_t input_data) {
     clock(&JTAGOUT, TCK);     // (0) FSM: Shift-IR
 
     // Shift data into IR LSB first
-    uint8_t bit;
+    volatile uint8_t bit;
+    volatile uint8_t sent = 0;
     int i;
     for (i = 0; i < 7; i++) {
-        bit = (input_data >> i) & 0x1;
-        bit &= 0x01; // send the selected bit
+        bit = (input_data >> i) & 1;
         setLevel(&JTAGOUT, TDI, bit);
         clock(&JTAGOUT, TCK);
         uint8_t level = 1;
@@ -80,41 +71,31 @@ uint8_t IR_SHIFT(uint8_t input_data) {
             level = 0;
         }
         output_data |= level << (7 - i);
+        sent |= bit << i;
     }
 
     // Send MSB and return to IDLE state
-    bit = input_data >> 7;
-    bit &= 0x01;
+    bit = (input_data >> 7) & 1;
+    if (bit) {
+        sent |= 0x80; // the compiler made me do it...
+    }
     JTAGOUT |= TMS;
     setLevel(&JTAGOUT, TDI, bit);
     clock(&JTAGOUT, TCK);    // (1) FSM: Exit-IR
     if ((JTAGIN & TDO) == 0) {
-        output_data &= ~0x01;
+        output_data &= ~1;
     } else {
-        output_data |= 0x01;
+        output_data |= 1;
     }
     setLevel(&JTAGOUT, TDI, prev_TDI);
     clock(&JTAGOUT, TCK);    // (1) FSM: Update-IR
     JTAGOUT &= ~TMS;
     clock(&JTAGOUT, TCK);    // (0) FSM: IDLE
 
-    // Confirm FSM is in IDLE state
-    for (i = 0; i < 6; i++) {
-        clock(&JTAGOUT, TCK);
-    }
-
     return output_data;
 }
 
 uint16_t DR_SHIFT(uint16_t input_data) {
-    // Reset FSM to IDLE in case of faulty fuse check
-    JTAGOUT |= TMS;
-    int i;
-    for (i = 0; i < 7; i++) {
-        clock(&JTAGOUT, TCK);    // FSM: TLR
-    }
-    JTAGOUT &= ~TMS;
-    clock(&JTAGOUT, TCK);
     uint16_t output_data = 0;
     int prev_TDI = JTAGOUT & TDI;
 
@@ -128,14 +109,13 @@ uint16_t DR_SHIFT(uint16_t input_data) {
 
     // Shift data into DR MSB first
     uint16_t bit;
-//    int i;
+    int i;
     for (i = 15; i > 0; i--) {
-        bit = (input_data >> i) & 0x1;
-        bit &= 0x0001; // send the selected bit
+        bit = (input_data >> i) & 1;
         setLevel(&JTAGOUT, TDI, bit);
         clock(&JTAGOUT, TCK);
         volatile uint16_t level = 1;
-        if ((JTAGIN & TDO) == 0) {
+          if ((JTAGIN & TDO) == 0) {
             level = 0;
         } else {
             level = 1;
@@ -144,27 +124,20 @@ uint16_t DR_SHIFT(uint16_t input_data) {
     }
 
     // Send LSB and return to IDLE state
-    bit = input_data;
-    bit &= 0x0001;
+    bit = input_data & 1;
     JTAGOUT |= TMS;
     setLevel(&JTAGOUT, TDI, bit);
     clock(&JTAGOUT, TCK);    // (1) FSM: Exit-DR
 
     if ((JTAGIN & TDO) == 0) {
-        output_data &= (uint16_t) ~0x0001;
+        output_data &= (uint16_t) ~1;
     } else {
-        output_data |= (uint16_t) 0x0001;
+        output_data |= (uint16_t) 1;
     }
-
     setLevel(&JTAGOUT, TDI, prev_TDI);
     clock(&JTAGOUT, TCK);    // (1) FSM: Update-DR
     JTAGOUT &= ~TMS;
     clock(&JTAGOUT, TCK);    // (0) FSM: IDLE
-
-    // Confirm FSM is in IDLE state
-    for (i = 0; i < 6; i++) {
-        clock(&JTAGOUT, TCK);
-    }
 
     return output_data;
 }
