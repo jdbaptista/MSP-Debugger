@@ -11,7 +11,7 @@
 #include <stdint.h>
 
 void getDevice();
-int setInstrFetch();
+bool setInstrFetch();
 void setPC(uint16_t address);
 void haltCPU();
 void releaseCPU();

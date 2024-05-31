@@ -7,6 +7,8 @@
 #include <msp430.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <stdbool.h>
+#include "jtag_control.h"
 #include "jtag_fsm.h"
 
 /*
@@ -33,7 +35,7 @@ void getDevice() {
  *         1 if a JTAG access error has occurred and a JTAG
  *         reset is recommended.
  */
-int setInstrFetch() {
+bool setInstrFetch() {
     IR_SHIFT(IR_CNTRL_SIG_CAPTURE);
     int i;
     for (i = 0; i < 8; i++) {

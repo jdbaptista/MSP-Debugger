@@ -11,6 +11,7 @@ GEN_CMDS__FLAG :=
 
 ORDERED_OBJS += \
 "./main.obj" \
+"./tests/control_tests.obj" \
 "./tests/fsm_tests.obj" \
 "../lnk_msp430f5529.cmd" \
 $(GEN_CMDS__FLAG) \
@@ -147,8 +148,8 @@ msp430JtagDriverTest.out: $(OBJS) $(CMD_SRCS) $(GEN_CMDS)
 # Other Targets
 clean:
 	-$(RM) $(EXE_OUTPUTS__QUOTED)
-	-$(RM) "main.obj" "tests\fsm_tests.obj" 
-	-$(RM) "main.d" "tests\fsm_tests.d" 
+	-$(RM) "main.obj" "tests\control_tests.obj" "tests\fsm_tests.obj" 
+	-$(RM) "main.d" "tests\control_tests.d" "tests\fsm_tests.d" 
 	-@echo 'Finished clean'
 	-@echo ' '
 

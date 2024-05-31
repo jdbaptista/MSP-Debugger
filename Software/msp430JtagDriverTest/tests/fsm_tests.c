@@ -1,20 +1,10 @@
 #include <stdbool.h>
 #include <stdint.h>
-#include "tests/fsm_tests.h"
+#include "fsm_tests.h"
 #include "jtag_fsm.h"
 #include "bc_uart.h"
 
-bool test_init_fsm(void) {
-    // case 1: standard operation
-    bool result = initFSM();
-    return result;
-}
-
 bool test_ir_shift(void) {
-    // run prerequisite tests
-    if (!test_init_fsm()) {
-        return false;
-    }
     // case 1: standard operation
     initFSM();
     unsigned int output = IR_SHIFT(0x00);
@@ -26,27 +16,48 @@ bool test_ir_shift(void) {
 }
 
 bool test_dr_shift(void) {
-    // run prerequisite tests
-    if (!test_init_fsm() || !test_ir_shift()) {
-        return false;
-    }
     // case 1: IR_BYPASS
-    initFSM();
-    IR_SHIFT(IR_BYPASS);
+    initFSM(); // should default to IR_BYPASS
     DR_SHIFT(0); // set first bit
     volatile uint16_t output = DR_SHIFT(0x4411);
     if (output != 0x2208) {
         return false;
     }
-    // case 2: MAB manipulation
+
+    return true;
+}
+
+bool test_ir_mab(void) {
+    // case 1: set and read MAB
+    initFSM();
     IR_SHIFT(IR_ADDR_16BIT);
-    DR_SHIFT(0);
-    output = DR_SHIFT(0x4411);
-    if (output != 0) {
+    volatile uint16_t output = DR_SHIFT(0xBEEF);
+    output = DR_SHIFT(0);
+    if (output != 0xBEEF) {
         return false;
     }
 
     return true;
+}
+
+bool test_ir_mdb(void) {
+    // case 1: IR_DATA_TO_ADDR
+
+    // case 2: IR_DATA_16BIT
+
+    // case 3: IR_DATA_QUICK
+
+    return false;
+}
+
+bool test_ir_cpu(void) {
+    // case 1: IR_CNTRL_SIG_16BIT
+
+    // case 2: IR_CNTRL_SIG_CAPTURE
+
+    // case 3: IR_CNTRL_SIG_RELEASE
+
+    return false;
 }
 
 void run_tests() {

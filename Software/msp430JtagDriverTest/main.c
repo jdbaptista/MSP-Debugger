@@ -1,15 +1,7 @@
 #include <bc_uart.h>
 #include <msp430.h>
 #include <stdbool.h>
-#include "tests/fsm_tests.h" // CHANGE THIS LINE TO RUN DIFFERENT TESTS
-
-/***
- * This test file is special because it tests
- * the backchannel UART library. That is, it
- * will not state anything to the serial monitor
- * if it is not working! If so, debug the wait_print
- * function inside setup().
- ***/
+#include "fsm_tests.h" // CHANGE THIS LINE TO RUN DIFFERENT TESTS
 
 /***
  * Things may not work here, but there is no

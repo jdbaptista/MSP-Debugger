@@ -1,4 +1,5 @@
 "./main.obj"
+"./tests/control_tests.obj"
 "./tests/fsm_tests.obj"
 "../lnk_msp430f5529.cmd"
 -llibmath.a

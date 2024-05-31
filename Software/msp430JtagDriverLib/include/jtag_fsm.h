@@ -17,12 +17,13 @@
 #define JTAG_FSM_H_
 
 #include <stdint.h>
+#include <stdbool.h>
 
-int initFSM();
+void initFSM();
 uint8_t IR_SHIFT(uint8_t input_data);
 uint16_t DR_SHIFT(uint16_t input_data);
-inline void setTCLK();
-inline void clrTCLK();
+inline void SetTCLK();
+inline void ClrTCLK();
 
 // JTAG Instructions: (pg. 14)
 

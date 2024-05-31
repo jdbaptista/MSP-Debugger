@@ -53,11 +53,8 @@ volatile void setLevel(volatile uint8_t* port, int pin, uint16_t value) {
 
 /*
  * Initializes the JTAG FSM to the IDLE state.
- *
- * Returns: 1 if FSM is put in the IDLE state successfully,
- *          0 if FSM failed fuse check or an error occurred.
  */
-int initFSM() {
+void initFSM() {
     // configure JTAG GPIO pins
     JTAGDIR = 0xFF;  // Begin with all pins set to output
     JTAGDIR &= ~TDO; // Set TDO to input
@@ -87,8 +84,6 @@ int initFSM() {
     slowClock(&JTAGOUT, TMS);
     slowClock(&JTAGOUT, TMS);
     JTAGOUT &= ~TMS;
-
-    return 1;
 }
 
 /*
@@ -113,7 +108,6 @@ uint8_t IR_SHIFT(uint8_t input_data) {
 
     // Shift data into IR LSB first
     volatile uint8_t bit;
-    volatile uint8_t sent = 0;
     int i;
     for (i = 0; i < 7; i++) {
         bit = (input_data >> i) & 1;
@@ -124,14 +118,10 @@ uint8_t IR_SHIFT(uint8_t input_data) {
             level = 0;
         }
         output_data |= level << (7 - i);
-        sent |= bit << i;
     }
 
     // Send MSB and return to IDLE state
     bit = (input_data >> 7) & 1;
-    if (bit) {
-        sent |= 0x80; // the compiler made me do it...
-    }
     JTAGOUT |= TMS;
     setLevel(&JTAGOUT, TDI, bit);
     clock(&JTAGOUT, TCK);    // (1) FSM: Exit-IR
@@ -205,13 +195,13 @@ uint16_t DR_SHIFT(uint16_t input_data) {
 /*
  * Sets TCLK to 1.
  */
-inline void setTCLK() {
+inline void SetTCLK() {
     JTAGOUT |= TCK;
 }
 
 /*
  * Sets TCLK to 0.
  */
-inline void clrTCLK() {
+inline void ClrTCLK() {
     JTAGOUT &= ~TCK;
 }
