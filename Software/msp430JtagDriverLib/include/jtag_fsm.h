@@ -18,6 +18,12 @@
 
 #include <stdint.h>
 
+int initFSM();
+uint8_t IR_SHIFT(uint8_t input_data);
+uint16_t DR_SHIFT(uint16_t input_data);
+inline void setTCLK();
+inline void clrTCLK();
+
 // JTAG Instructions: (pg. 14)
 
 /***
@@ -146,40 +152,5 @@
  */
 #define IR_JMB_EXCHANGE (0x61)
 
-/*
- * Initializes the JTAG FSM to the IDLE state.
- *
- * Returns: 1 if FSM is put in the IDLE state successfully,
- *          0 if FSM failed fuse check or an error occurred.
- */
-int initFSM();
-
-/*
- * Shifts an 8-bit JTAG instruction into the JTAG instruction register (IR).
- *
- * input_data: The JTAG instruction to be shifted into the IR.
- *
- * Returns: 8-bit JTAG ID (See pg.64 of interface reference).
- */
-uint8_t IR_SHIFT(uint8_t input_data);
-
-/*
- * Shifts a 16-bit word into a JTAG data register (DR).
- *
- * input_data: The data to be shifted into the addressed DR.
- *
- * Returns: Last captured and stored value in the addressed DR.
- */
-uint16_t DR_SHIFT(uint16_t input_data);
-
-/*
- * Sets TCLK to 1
- */
-inline void setTCLK();
-
-/*
- * Sets TCLK to 0
- */
-inline void clrTCLK();
 
 #endif /* JTAG_FSM_H_ */

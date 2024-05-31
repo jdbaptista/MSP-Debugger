@@ -11,6 +11,52 @@
 #include "jtag_fsm.h"
 #include "jtag_config.h"
 
+volatile void delay() {
+    volatile uint16_t timer = 0xF;
+    while (timer != 0) {
+        timer--;
+    }
+}
+
+/*
+ * Clocks port.pin.
+ */
+volatile inline void clock(volatile uint8_t* port, int pin) {
+    *port &= ~pin;
+    *port |= pin;
+}
+
+
+/*
+ * Has a total period of 2 * 7.62microseconds, which satisfies
+ * the fuse check time of 5microseconds.
+ */
+volatile inline void slowClock(volatile uint8_t* port, int pin) {
+    *port &= ~pin;
+    *port &= ~pin;
+    *port |= pin;
+    *port |= pin;
+
+}
+
+/*
+ * Sets port.pin high if value is true (1) and
+ * low if value is false (0).
+ */
+volatile void setLevel(volatile uint8_t* port, int pin, uint16_t value) {
+    if (value) {
+        *port |= pin;
+    } else {
+        *port &= ~pin;
+    }
+}
+
+/*
+ * Initializes the JTAG FSM to the IDLE state.
+ *
+ * Returns: 1 if FSM is put in the IDLE state successfully,
+ *          0 if FSM failed fuse check or an error occurred.
+ */
 int initFSM() {
     // configure JTAG GPIO pins
     JTAGDIR = 0xFF;  // Begin with all pins set to output
@@ -45,6 +91,13 @@ int initFSM() {
     return 1;
 }
 
+/*
+ * Shifts an 8-bit JTAG instruction into the JTAG instruction register (IR).
+ *
+ * input_data: The JTAG instruction to be shifted into the IR.
+ *
+ * Returns: 8-bit JTAG ID (See pg.64 of interface reference).
+ */
 uint8_t IR_SHIFT(uint8_t input_data) {
     uint8_t output_data = 0;
     int prev_TDI = (JTAGOUT & TDI);
@@ -95,6 +148,13 @@ uint8_t IR_SHIFT(uint8_t input_data) {
     return output_data;
 }
 
+/*
+ * Shifts a 16-bit word into a JTAG data register (DR).
+ *
+ * input_data: The data to be shifted into the addressed DR.
+ *
+ * Returns: Last captured and stored value in the addressed DR.
+ */
 uint16_t DR_SHIFT(uint16_t input_data) {
     uint16_t output_data = 0;
     int prev_TDI = JTAGOUT & TDI;
@@ -142,10 +202,16 @@ uint16_t DR_SHIFT(uint16_t input_data) {
     return output_data;
 }
 
+/*
+ * Sets TCLK to 1.
+ */
 inline void setTCLK() {
     JTAGOUT |= TCK;
 }
 
+/*
+ * Sets TCLK to 0.
+ */
 inline void clrTCLK() {
     JTAGOUT &= ~TCK;
 }

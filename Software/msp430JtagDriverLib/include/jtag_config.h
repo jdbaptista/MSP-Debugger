@@ -11,7 +11,6 @@
 #include <msp430.h>
 #include <stdint.h>
 
-
 /*
  * JTAG GPIO Pins
  *
@@ -27,47 +26,6 @@
 #define TDI         (0x10)      // JTAG data input and TCLK input (4) (14)
 #define TDO         (0x20)      // JTAG data output (5) (15)
 #define TEST        (0x40)      // JTAG enable pins (6) (17)
-
-
-volatile void delay() {
-    volatile uint16_t timer = 0xF;
-    while (timer != 0) {
-        timer--;
-    }
-}
-
-/*
- * Clocks port.pin.
- */
-volatile inline void clock(volatile uint8_t* port, int pin) {
-    *port &= ~pin;
-    *port |= pin;
-}
-
-
-/*
- * Has a total period of 2 * 7.62microseconds, which satisfies
- * the fuse check time of 5microseconds.
- */
-volatile inline void slowClock(volatile uint8_t* port, int pin) {
-    *port &= ~pin;
-    *port &= ~pin;
-    *port |= pin;
-    *port |= pin;
-
-}
-
-/*
- * Sets port.pin high if value is true (1) and
- * low if value is false (0).
- */
-volatile void setLevel(volatile uint8_t* port, int pin, uint16_t value) {
-    if (value) {
-        *port |= pin;
-    } else {
-        *port &= ~pin;
-    }
-}
 
 
 #endif /* JTAG_CONFIG_H_ */
