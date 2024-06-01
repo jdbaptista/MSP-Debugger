@@ -2,7 +2,6 @@
 #include <stdint.h>
 #include "fsm_tests.h"
 #include "jtag_fsm.h"
-#include "bc_uart.h"
 
 bool test_ir_shift(void) {
     // case 1: standard operation
@@ -59,37 +58,3 @@ bool test_ir_cpu(void) {
 
     return false;
 }
-
-void run_tests() {
-    static const unsigned int length = sizeof(test_names)/sizeof(char*);
-    bool results[length];
-
-    unsigned int i;
-    for(i = 0; i < length; i++) {
-        results[i] = run_test(test_funcs[i], test_names[i]);
-    }
-
-    for(i = 0; i < length; i++) {
-        wait_print(test_names[i]);
-        if (results[i]) {
-            wait_print(" passed.");
-        } else {
-            wait_print(" failed.");
-        }
-        wait_print("\033[E"); // newline command
-    }
-}
-
-bool run_test(bool (*test)(), char* test_name) {
-    uart_wait();
-    bool result = test();
-    wait_print(test_name);
-    if (result) {
-        wait_print(" passed.");
-    } else {
-        wait_print(" failed.");
-    }
-    wait_print("\033[E"); // newline command
-    return result;
-}
-

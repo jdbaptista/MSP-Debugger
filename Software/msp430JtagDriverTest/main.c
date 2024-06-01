@@ -1,7 +1,14 @@
 #include <bc_uart.h>
 #include <msp430.h>
 #include <stdbool.h>
-#include "fsm_tests.h" // CHANGE THIS LINE TO RUN DIFFERENT TESTS
+#include "tests.h"
+
+
+
+#include "fsm_tests.h" // CHANGE THIS LINE TO
+                       // RUN DIFFERENT TESTS
+
+
 
 /***
  * Things may not work here, but there is no
@@ -30,6 +37,6 @@ inline void setup() {
 int main(void)
 {
     setup();
-    run_tests();
+    run_tests(test_funcs, test_names, sizeof(test_names)/sizeof(char*));
     return 0;
 }

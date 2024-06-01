@@ -9,9 +9,6 @@
 #define TESTS_CONTROL_TESTS_H_
 
 
-void run_tests();
-bool run_test(bool (*test)(void), char* test_name);
-
 bool test_get_device();
 bool test_set_instr_fetch();
 bool test_set_pc();

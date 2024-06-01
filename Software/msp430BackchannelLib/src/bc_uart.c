@@ -119,24 +119,24 @@ static int curr_bc_buffer_ndx = -1; // -1 indicates no current string transmissi
 #pragma vector=BC_INT_VEC
 interrupt void bc_uart_irq(void) {
    switch(__even_in_range(BCIV, 4)) {
-               case 0: break; // no interrupt
-               case 2: // data recieved
-                   BCIFG &= ~UCRXIFG;
-                   break;
-               case 4: // tx buffer empty
-                   BCIFG &= ~UCTXIFG;
-                   if (curr_bc_buffer_ndx < 0) {
-                       break;
-                   } else if (bc_buffer[curr_bc_buffer_ndx] == 0x00) {
-                       curr_bc_buffer_ndx = -1;
-                       break;
-                   } else {
-                       curr_bc_buffer_ndx++;
-                       BCTXBUF = bc_buffer[curr_bc_buffer_ndx];
-                   }
-                   break;
-               default: break;
+       case 0: break; // no interrupt
+       case 2: // data recieved
+           clear_uart_rx_interrupt_flag();
+           break;
+       case 4: // tx buffer empty
+           clear_uart_tx_interrupt_flag();
+           if (curr_bc_buffer_ndx < 0) {
+               break;
+           } else if (bc_buffer[curr_bc_buffer_ndx] == 0x00) {
+               curr_bc_buffer_ndx = -1;
+               break;
+           } else {
+               curr_bc_buffer_ndx++;
+               BCTXBUF = bc_buffer[curr_bc_buffer_ndx];
            }
+           break;
+       default: break;
+   }
 }
 
 /**

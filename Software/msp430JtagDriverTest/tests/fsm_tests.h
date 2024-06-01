@@ -9,9 +9,6 @@
 #define TESTS_FSM_TESTS_H_
 
 
-void run_tests();
-bool run_test(bool (*test)(void), char* test_name);
-
 bool test_ir_shift(void);
 bool test_dr_shift(void);
 bool test_ir_mab(void);

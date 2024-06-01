@@ -45,5 +45,3 @@ bool test_read_mem() {
 bool test_write_mem() {
     return false;
 }
-
-
