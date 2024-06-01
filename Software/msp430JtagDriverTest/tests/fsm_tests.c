@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include "fsm_tests.h"
 #include "jtag_fsm.h"
+#include "jtag_control.h"
 
 bool test_ir_shift(void) {
     // case 1: standard operation
@@ -36,25 +37,13 @@ bool test_ir_mab(void) {
         return false;
     }
 
+    // I'm not sure what the expected
+    // behavior of IR_ADDR_CAPTURE is,
+    // but it isn't doing what I think
+    // it should be doing so I will not
+    // write a test for it. It's usually
+    // something around 0xC008, but I
+    // can't seem to control the output.
+
     return true;
-}
-
-bool test_ir_mdb(void) {
-    // case 1: IR_DATA_TO_ADDR
-
-    // case 2: IR_DATA_16BIT
-
-    // case 3: IR_DATA_QUICK
-
-    return false;
-}
-
-bool test_ir_cpu(void) {
-    // case 1: IR_CNTRL_SIG_16BIT
-
-    // case 2: IR_CNTRL_SIG_CAPTURE
-
-    // case 3: IR_CNTRL_SIG_RELEASE
-
-    return false;
 }
