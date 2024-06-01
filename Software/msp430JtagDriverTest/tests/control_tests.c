@@ -9,39 +9,31 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include "control_tests.h"
+#include "jtag_control.h"
+#include "jtag_fsm.h"
 
-bool test_get_device() {
-    return false;
-}
+bool test_read_write() {
+    const uint16_t addr1 = 0x0332; // non-flash memory
+    const uint16_t addr2 = 0x0200; // which is writeable
 
-bool test_set_instr_fetch() {
-    return false;
-}
+    initFSM();
+    getDevice();
+    haltCPU();
+    writeMem(addr1, 0xB0BA);
+    writeMem(addr2, 0xCAFE);
+    releaseCPU();
 
-bool test_set_pc() {
-    return false;
-}
+    haltCPU();
+    volatile uint16_t output = readMem(addr1);
+    if (output != 0xB0BA) {
+        return false;
+    }
+    output = readMem(addr2);
+    if (output != 0xCAFE) {
+        return false;
+    }
 
-bool test_halt_pc() {
-    return false;
-}
+    releaseCPU();
 
-bool test_release_cpu() {
-    return false;
-}
-
-bool test_execute_por() {
-    return false;
-}
-
-bool test_release_device() {
-    return false;
-}
-
-bool test_read_mem() {
-    return false;
-}
-
-bool test_write_mem() {
-    return false;
+    return true;
 }
