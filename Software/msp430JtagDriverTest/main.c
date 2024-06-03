@@ -5,7 +5,7 @@
 
 
 
-#include "control_tests.h" // CHANGE THIS LINE TO
+#include "fsm_tests.h" // CHANGE THIS LINE TO
                        // RUN DIFFERENT TESTS
 
 

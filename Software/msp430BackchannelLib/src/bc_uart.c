@@ -5,6 +5,7 @@
  *      Author: Jaden Baptista
  */
 #include <msp430.h>
+#include <stdint.h>
 #include "bc_uart.h"
 #include "bc_config.h"
 
@@ -34,6 +35,12 @@ bool uart_config(void) {
         return 0;
     }
 
+//    // check USCI clock source is ACLK
+//    unsigned char clk_sel_bits = BCCTL1 & (UCSSEL0 | UCSSEL1);
+//    if (clk_sel_bits != 0x40) {
+//        return 0;
+//    }
+
     // set USCI module to UART mode
     BCCTL0 &= ~UCSYNC;
     // configure UART
@@ -43,10 +50,15 @@ bool uart_config(void) {
     BCCTL0 &= ~UCMODE0; // UART mode (00)
     BCCTL0 &= ~UCMODE1;
 
-    // Set baud rate to 9600 (br = 104, brs = 1, brf = 0)
+    // Set baud rate to 9600 (br = 104, brs = 1, brf = 0) for smclk
     BCBR0 = 104;
     BCBR1 = 0;
     BCMCTL = 0x02; // UCBRSx = 1
+
+//    // Set baud rate to 1200 (br = 27, brs = 2, brf = 0) for aclk
+//    BCBR0 = 27;
+//    BCBR1 = 0;
+//    BCMCTL = 0x04; // UCBRSx = 2
 
     return 1;
 }
@@ -127,7 +139,7 @@ interrupt void bc_uart_irq(void) {
            clear_uart_tx_interrupt_flag();
            if (curr_bc_buffer_ndx < 0) {
                break;
-           } else if (bc_buffer[curr_bc_buffer_ndx] == 0x00) {
+           } else if (bc_buffer[curr_bc_buffer_ndx + 1] == 0) {
                curr_bc_buffer_ndx = -1;
                break;
            } else {
@@ -168,11 +180,80 @@ bool print(char *input) {
     return 1;
 }
 
+/**
+ * Prints the input as 0xABCD,
+ * where ABCD is the hexidecimal
+ * representation of the input.
+ */
+bool print_hex(uint16_t input) {
+    const char ascii_table[] = {
+                                '0', '1', '2', '3', '4', '5', '6', '7',
+                                '8', '9', 'A', 'B', 'C', 'D', 'E', 'F',
+    }; // a hashmap of the ascii representation of lookup numbers 0-9.
+
+    unsigned char reset_high = BCCTL1 & UCSWRST;
+    if (curr_bc_buffer_ndx != -1 || reset_high) {
+        return 0; // transmission already in progress or peripheral off
+    }
+
+    // write hex indicator to buffer
+    bc_buffer[0] = ascii_table[0];
+    bc_buffer[1] = 'x';
+
+    // write hex values to buffer
+    bc_buffer[2] = ascii_table[(input >> 12) & 0x000F];
+    bc_buffer[3] = ascii_table[(input >> 8) & 0x000F];
+    bc_buffer[4] = ascii_table[(input >> 4) & 0x000F];
+    bc_buffer[5] = ascii_table[input & 0x000F];
+
+    // write null terminator
+    bc_buffer[6] = 0x00;
+
+    // begin transmitting
+    curr_bc_buffer_ndx = 0;
+    BCTXBUF = bc_buffer[0];
+
+    return 1;
+}
+
+bool print_binary(uint16_t input) {
+    unsigned char reset_high = BCCTL1 & UCSWRST;
+    if (curr_bc_buffer_ndx != -1 || reset_high) {
+        return 0; // transmission already in progress or peripheral off
+    }
+
+    // write binary indicator to buffer
+    bc_buffer[0] = '0';
+    bc_buffer[1] = 'b';
+
+    unsigned int i;
+    for (i = 0; i < 16; i++) {
+        bc_buffer[i + 2] = 48 + ((input >> (15 - i)) & 1);
+    }
+
+    // write null terminator
+    bc_buffer[18] = 0x00;
+
+    // begin transmitting
+    curr_bc_buffer_ndx = 0;
+    BCTXBUF = bc_buffer[0];
+
+    return 1;
+}
+
 /***
  * Polls the backchannel until done transmitting.
  */
 inline void wait_print(char *input) {
     while (!print(input)) {}
+}
+
+void wait_print_hex(uint16_t input) {
+    while (!print_hex(input)) {}
+}
+
+void wait_print_binary(uint16_t input) {
+    while (!print_binary(input)) {}
 }
 
 /**

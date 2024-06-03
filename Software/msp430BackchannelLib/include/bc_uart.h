@@ -9,6 +9,7 @@
 #define INCLUDE_UART_H_
 
 #include <stdbool.h>
+#include <stdint.h>
 #include "bc_config.h"
 
 #define USE_BC_IRQ // sets the interrupt handler
@@ -31,7 +32,11 @@ bool uart_send_char(char input);
 
 #ifdef USE_BC_IRQ
 bool print(char *input);
+bool print_hex(uint16_t input);
+bool print_binary(uint16_t input);
 void wait_print(char *input);
+void wait_print_hex(uint16_t input);
+void wait_print_binary(uint16_t input);
 void uart_wait(void);
 #endif
 

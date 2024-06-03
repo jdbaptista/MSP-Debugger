@@ -4,5 +4,5 @@
 
 USER_OBJS :=
 
-LIBS := -llibmath.a -lmsp430BackchannelLib.lib -lmsp430JtagDriverLib.lib -llibc.a
+LIBS := -llibc.a
 

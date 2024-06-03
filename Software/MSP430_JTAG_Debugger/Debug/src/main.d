@@ -17,8 +17,11 @@ src/main.obj: C:/ti/ccs1230/ccs/tools/compiler/ti-cgt-msp430_21.6.1.LTS/include/
 src/main.obj: C:/ti/ccs1230/ccs/tools/compiler/ti-cgt-msp430_21.6.1.LTS/include/machine/_types.h
 src/main.obj: C:/ti/ccs1230/ccs/tools/compiler/ti-cgt-msp430_21.6.1.LTS/include/machine/_stdint.h
 src/main.obj: C:/ti/ccs1230/ccs/tools/compiler/ti-cgt-msp430_21.6.1.LTS/include/sys/_stdint.h
-src/main.obj: C:/ti/ccs1230/ccs/tools/compiler/ti-cgt-msp430_21.6.1.LTS/include/stdlib.h
 src/main.obj: C:/ti/ccs1230/ccs/tools/compiler/ti-cgt-msp430_21.6.1.LTS/include/stdbool.h
+src/main.obj: C:/ti/ccs1230/ccs/tools/compiler/ti-cgt-msp430_21.6.1.LTS/include/stdlib.h
+src/main.obj: C:/Users/bapti/Documents/MSP-Debugger/Software/msp430BackchannelLib/include/bc_uart.h
+src/main.obj: C:/Users/bapti/Documents/MSP-Debugger/Software/msp430BackchannelLib/include/bc_config.h
+src/main.obj: C:/Users/bapti/Documents/MSP-Debugger/Software/msp430JtagDriverLib/include/jtag_control.h
 
 ../src/main.c:
 
@@ -54,7 +57,13 @@ C:/ti/ccs1230/ccs/tools/compiler/ti-cgt-msp430_21.6.1.LTS/include/machine/_stdin
 
 C:/ti/ccs1230/ccs/tools/compiler/ti-cgt-msp430_21.6.1.LTS/include/sys/_stdint.h:
 
+C:/ti/ccs1230/ccs/tools/compiler/ti-cgt-msp430_21.6.1.LTS/include/stdbool.h:
+
 C:/ti/ccs1230/ccs/tools/compiler/ti-cgt-msp430_21.6.1.LTS/include/stdlib.h:
 
-C:/ti/ccs1230/ccs/tools/compiler/ti-cgt-msp430_21.6.1.LTS/include/stdbool.h:
+C:/Users/bapti/Documents/MSP-Debugger/Software/msp430BackchannelLib/include/bc_uart.h:
+
+C:/Users/bapti/Documents/MSP-Debugger/Software/msp430BackchannelLib/include/bc_config.h:
+
+C:/Users/bapti/Documents/MSP-Debugger/Software/msp430JtagDriverLib/include/jtag_control.h:
 
