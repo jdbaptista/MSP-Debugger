@@ -33,6 +33,9 @@ bool test_read_write() {
         return false;
     }
 
+    output = readMem(0xFFFE);
+    output = readMem(0xC555);
+
     releaseCPU();
 
     return true;

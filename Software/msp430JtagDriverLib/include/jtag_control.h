@@ -18,7 +18,7 @@ void releaseCPU();
 void executePOR();
 void releaseDevice();
 uint16_t readMem(uint16_t address);
-uint16_t writeMem(uint16_t address, uint16_t data);
+void writeMem(uint16_t address, uint16_t data);
 
 
 #endif /* INCLUDE_JTAG_CONTROL_H_ */

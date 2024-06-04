@@ -1,7 +1,7 @@
 ******************************************************************************
                   MSP430 Linker PC v21.6.1                     
 ******************************************************************************
->> Linked Mon Jun  3 15:08:54 2024
+>> Linked Tue Jun  4 12:39:03 2024
 
 OUTPUT FILE NAME:   <MSP430_JTAG_Debugger.out>
 ENTRY POINT SYMBOL: "_c_int00_noargs"  address: 0000444c
@@ -20,7 +20,7 @@ MEMORY CONFIGURATION
   INFOA                 00001980   00000080  00000000  00000080  RWIX
   USBRAM                00001c00   00000800  00000000  00000800  RWIX
   RAM                   00002400   00002000  00000122  00001ede  RWIX
-  FLASH                 00004400   0000bb80  000000b0  0000bad0  RWIX
+  FLASH                 00004400   0000bb80  000000be  0000bac2  RWIX
   INT00                 0000ff80   00000002  00000000  00000002  RWIX
   INT01                 0000ff82   00000002  00000000  00000002  RWIX
   INT02                 0000ff84   00000002  00000000  00000002  RWIX
@@ -85,7 +85,7 @@ MEMORY CONFIGURATION
   INT61                 0000fffa   00000002  00000002  00000000  RWIX
   INT62                 0000fffc   00000002  00000002  00000000  RWIX
   RESET                 0000fffe   00000002  00000002  00000000  RWIX
-  FLASH2                00010000   000143f8  00000800  00013bf8  RWIX
+  FLASH2                00010000   000143f8  00000818  00013be0  RWIX
 
 
 SECTION ALLOCATION MAP
@@ -109,20 +109,20 @@ section   page    origin      length       input sections
                   0000444c    0000001c     rts430x_lc_rd_eabi.lib : boot.c.obj (.text:_isr:_c_int00_noargs)
                   00004468    00000008                            : isr_trap.asm.obj (.text:_isr:__TI_ISR_TRAP)
 
-.cinit     0    00004488    00000028     
-                  00004488    0000000c     (__TI_handler_table)
-                  00004494    00000006     (.cinit..bss.load) [load image, compression = zero_init]
-                  0000449a    00000006     (.cinit..data.load) [load image, compression = lzss]
-                  000044a0    00000010     (__TI_cinit_table)
+.cinit     0    00004496    00000028     
+                  00004496    0000000c     (__TI_handler_table)
+                  000044a2    00000006     (.cinit..bss.load) [load image, compression = zero_init]
+                  000044a8    00000006     (.cinit..data.load) [load image, compression = lzss]
+                  000044ae    00000010     (__TI_cinit_table)
 
 .binit     0    00004400    00000000     
 
 .init_array 
 *          0    00004400    00000000     UNINITIALIZED
 
-.const     0    00004470    00000018     
-                  00004470    00000010     msp430BackchannelLib.lib : bc_uart.obj (.const:.string:$P$T0$1)
-                  00004480    00000008     main.obj (.const:.string)
+.const     0    00004470    00000026     
+                  00004470    00000016     main.obj (.const:.string)
+                  00004486    00000010     msp430BackchannelLib.lib : bc_uart.obj (.const:.string:$P$T0$1)
 
 RTC        0    0000ffd2    00000002     
                   0000ffd2    00000002     rts430x_lc_rd_eabi.lib : int41.asm.obj (.int41)
@@ -201,64 +201,64 @@ SYSNMI     0    0000fffc    00000002
 .reset     0    0000fffe    00000002     
                   0000fffe    00000002     rts430x_lc_rd_eabi.lib : boot.c.obj (.reset)
 
-.text      0    00010000    00000800     
-                  00010000    00000112     msp430JtagDriverLib.lib : jtag_fsm.obj (.text:IR_SHIFT)
-                  00010112    000000fc                             : jtag_fsm.obj (.text:DR_SHIFT)
-                  0001020e    000000a4     main.obj (.text:main)
-                  000102b2    000000a2     msp430BackchannelLib.lib : bc_uart.obj (.text:print_hex)
-                  00010354    0000008e     msp430JtagDriverLib.lib : jtag_fsm.obj (.text:initFSM)
-                  000103e2    00000076     rts430x_lc_rd_eabi.lib : copy_decompress_lzss.c.obj (.text:decompress:lzss:__TI_decompress_lzss)
-                  00010458    00000070     msp430BackchannelLib.lib : bc_uart.obj (.text:print)
-                  000104c8    00000068                              : bc_uart.obj (.text:uart_config)
-                  00010530    00000054     rts430x_lc_rd_eabi.lib : autoinit.c.obj (.text:__TI_auto_init_nobinit_nopinit_hold_wdt:__TI_auto_init_nobinit_nopinit_hold_wdt)
-                  00010584    00000042     msp430JtagDriverLib.lib : jtag_control.obj (.text:readMem)
-                  000105c6    0000003c                             : jtag_control.obj (.text:setInstrFetch)
-                  00010602    00000036                             : jtag_fsm.obj (.text:slowClock)
-                  00010638    00000034                             : jtag_control.obj (.text:getDevice)
-                  0001066c    0000002a                             : jtag_control.obj (.text:haltCPU)
-                  00010696    0000002a                             : jtag_fsm.obj (.text:setLevel)
-                  000106c0    00000024     rts430x_lc_rd_eabi.lib : copy_zero_init.c.obj (.text:decompress:ZI:__TI_zero_init_nomemset:__TI_zero_init_nomemset)
-                  000106e4    00000022     msp430JtagDriverLib.lib : jtag_fsm.obj (.text:clock)
-                  00010706    00000022                             : jtag_control.obj (.text:releaseCPU)
-                  00010728    00000022                             : jtag_control.obj (.text:releaseDevice)
-                  0001074a    0000001a     msp430BackchannelLib.lib : bc_uart.obj (.text:wait_print)
-                  00010764    00000014     rts430x_lc_rd_eabi.lib : memcpy.c.obj (.text:memcpy)
-                  00010778    00000014     msp430BackchannelLib.lib : bc_uart.obj (.text:wait_print_hex)
-                  0001078c    00000012     rts430x_lc_rd_eabi.lib : copy_decompress_none.c.obj (.text:decompress:none:__TI_decompress_none)
-                  0001079e    0000000e     msp430BackchannelLib.lib : bc_uart.obj (.text:use_bc_uart_pins)
-                  000107ac    0000000a     rts430x_lc_rd_eabi.lib : asr16.asm.obj (.text)
-                  000107b6    0000000a                            : lsl16.asm.obj (.text)
-                  000107c0    0000000a                            : lsr16.asm.obj (.text)
-                  000107ca    00000006     msp430JtagDriverLib.lib : jtag_fsm.obj (.text:ClrTCLK)
-                  000107d0    00000006                             : jtag_fsm.obj (.text:SetTCLK)
-                  000107d6    00000006     rts430x_lc_rd_eabi.lib : exit.c.obj (.text:abort)
-                  000107dc    00000006     msp430BackchannelLib.lib : bc_uart.obj (.text:clear_uart_rx_interrupt_flag)
-                  000107e2    00000006                              : bc_uart.obj (.text:clear_uart_tx_interrupt_flag)
-                  000107e8    00000006                              : bc_uart.obj (.text:enable_uart_tx_interrupt)
-                  000107ee    00000006                              : bc_uart.obj (.text:usci_reset)
-                  000107f4    00000006                              : bc_uart.obj (.text:usci_start)
-                  000107fa    00000004     rts430x_lc_rd_eabi.lib : pre_init.c.obj (.text:_system_pre_init)
-                  000107fe    00000002                            : startup.c.obj (.text:_system_post_cinit)
+.text      0    00010000    00000818     
+                  00010000    00000130     msp430JtagDriverLib.lib : jtag_fsm.obj (.text:IR_SHIFT)
+                  00010130    0000011a                             : jtag_fsm.obj (.text:DR_SHIFT)
+                  0001024a    000000ae     main.obj (.text:main)
+                  000102f8    000000a2     msp430BackchannelLib.lib : bc_uart.obj (.text:print_hex)
+                  0001039a    0000008e     msp430JtagDriverLib.lib : jtag_fsm.obj (.text:initFSM)
+                  00010428    00000076     rts430x_lc_rd_eabi.lib : copy_decompress_lzss.c.obj (.text:decompress:lzss:__TI_decompress_lzss)
+                  0001049e    00000070     msp430BackchannelLib.lib : bc_uart.obj (.text:print)
+                  0001050e    0000006c                              : bc_uart.obj (.text:uart_config)
+                  0001057a    00000054     rts430x_lc_rd_eabi.lib : autoinit.c.obj (.text:__TI_auto_init_nobinit_nopinit_hold_wdt:__TI_auto_init_nobinit_nopinit_hold_wdt)
+                  000105ce    0000004e     msp430JtagDriverLib.lib : jtag_control.obj (.text:readMem)
+                  0001061c    00000036                             : jtag_fsm.obj (.text:slowClock)
+                  00010652    0000002a                             : jtag_control.obj (.text:haltCPU)
+                  0001067c    0000002a                             : jtag_fsm.obj (.text:setLevel)
+                  000106a6    00000026                             : jtag_control.obj (.text:getDevice)
+                  000106cc    00000024     rts430x_lc_rd_eabi.lib : copy_zero_init.c.obj (.text:decompress:ZI:__TI_zero_init_nomemset:__TI_zero_init_nomemset)
+                  000106f0    00000022     msp430JtagDriverLib.lib : jtag_fsm.obj (.text:clock)
+                  00010712    00000022                             : jtag_control.obj (.text:releaseCPU)
+                  00010734    00000022                             : jtag_control.obj (.text:releaseDevice)
+                  00010756    0000001a     msp430BackchannelLib.lib : bc_uart.obj (.text:wait_print)
+                  00010770    00000014     rts430x_lc_rd_eabi.lib : memcpy.c.obj (.text:memcpy)
+                  00010784    00000014     msp430BackchannelLib.lib : bc_uart.obj (.text:wait_print_hex)
+                  00010798    00000012     rts430x_lc_rd_eabi.lib : copy_decompress_none.c.obj (.text:decompress:none:__TI_decompress_none)
+                  000107aa    0000000e     msp430BackchannelLib.lib : bc_uart.obj (.text:use_bc_uart_pins)
+                  000107b8    0000000a     rts430x_lc_rd_eabi.lib : asr16.asm.obj (.text)
+                  000107c2    0000000a                            : lsl16.asm.obj (.text)
+                  000107cc    0000000a                            : lsr16.asm.obj (.text)
+                  000107d6    00000008     msp430JtagDriverLib.lib : jtag_fsm.obj (.text:ClrTCLK)
+                  000107de    00000008                             : jtag_fsm.obj (.text:SetTCLK)
+                  000107e6    00000008                             : jtag_fsm.obj (.text:releaseFSM)
+                  000107ee    00000006     rts430x_lc_rd_eabi.lib : exit.c.obj (.text:abort)
+                  000107f4    00000006     msp430BackchannelLib.lib : bc_uart.obj (.text:clear_uart_rx_interrupt_flag)
+                  000107fa    00000006                              : bc_uart.obj (.text:clear_uart_tx_interrupt_flag)
+                  00010800    00000006                              : bc_uart.obj (.text:enable_uart_tx_interrupt)
+                  00010806    00000006                              : bc_uart.obj (.text:usci_reset)
+                  0001080c    00000006                              : bc_uart.obj (.text:usci_start)
+                  00010812    00000004     rts430x_lc_rd_eabi.lib : pre_init.c.obj (.text:_system_pre_init)
+                  00010816    00000002                            : startup.c.obj (.text:_system_post_cinit)
 
 MODULE SUMMARY
 
        Module                       code   ro data   rw data
        ------                       ----   -------   -------
     .\src\
-       main.obj                     164    8         0      
+       main.obj                     174    22        0      
     +--+----------------------------+------+---------+---------+
-       Total:                       164    8         0      
+       Total:                       174    22        0      
                                                             
     C:/Users/bapti/Documents/MSP-Debugger/Software/msp430BackchannelLib/Debug/msp430BackchannelLib.lib
-       bc_uart.obj                  544    18        130    
+       bc_uart.obj                  548    18        130    
     +--+----------------------------+------+---------+---------+
-       Total:                       544    18        130    
+       Total:                       548    18        130    
                                                             
     C:/Users/bapti/Documents/MSP-Debugger/Software/msp430JtagDriverLib/Debug/msp430JtagDriverLib.lib
-       jtag_fsm.obj                 810    0         0      
-       jtag_control.obj             288    0         0      
+       jtag_fsm.obj                 882    0         0      
+       jtag_control.obj             226    0         0      
     +--+----------------------------+------+---------+---------+
-       Total:                       1098   0         0      
+       Total:                       1108   0         0      
                                                             
     C:\ti\ccs1230\ccs\tools\compiler\ti-cgt-msp430_21.6.1.LTS\lib\rts430x_lc_rd_eabi.lib
        copy_decompress_lzss.c.obj   118    0         0      
@@ -301,19 +301,19 @@ MODULE SUMMARY
        Stack:                       0      0         160    
        Linker Generated:            0      40        0      
     +--+----------------------------+------+---------+---------+
-       Grand Total:                 2160   110       290    
+       Grand Total:                 2184   124       290    
 
 
 LINKER GENERATED COPY TABLES
 
-__TI_cinit_table @ 000044a0 records: 2, size/record: 8, table size: 16
-	.bss: load addr=00004494, load size=00000006 bytes, run addr=00002400, run size=00000080 bytes, compression=zero_init
-	.data: load addr=0000449a, load size=00000006 bytes, run addr=00002480, run size=00000002 bytes, compression=lzss
+__TI_cinit_table @ 000044ae records: 2, size/record: 8, table size: 16
+	.bss: load addr=000044a2, load size=00000006 bytes, run addr=00002400, run size=00000080 bytes, compression=zero_init
+	.data: load addr=000044a8, load size=00000006 bytes, run addr=00002480, run size=00000002 bytes, compression=lzss
 
 
 LINKER GENERATED HANDLER TABLE
 
-__TI_handler_table @ 00004488 records: 3, size/record: 4, table size: 12
+__TI_handler_table @ 00004496 records: 3, size/record: 4, table size: 12
 	index: 0, handler: __TI_zero_init
 	index: 1, handler: __TI_decompress_lzss
 	index: 2, handler: __TI_decompress_none
@@ -405,7 +405,7 @@ address   name
 00000732  ADC12MEM9                              
 00000733  ADC12MEM9_H                            
 00000732  ADC12MEM9_L                            
-000107d6  C$$EXIT                                
+000107ee  C$$EXIT                                
 000008c0  CBCTL0                                 
 000008c1  CBCTL0_H                               
 000008c0  CBCTL0_L                               
@@ -434,7 +434,7 @@ address   name
 00000156  CRCRESR                                
 00000157  CRCRESR_H                              
 00000156  CRCRESR_L                              
-000107ca  ClrTCLK                                
+000107d6  ClrTCLK                                
 00000510  DMA0CTL                                
 00000516  DMA0DA                                 
 00000518  DMA0DAH                                
@@ -465,7 +465,7 @@ address   name
 00000506  DMACTL3                                
 00000508  DMACTL4                                
 0000050e  DMAIV                                  
-00010112  DR_SHIFT                               
+00010130  DR_SHIFT                               
 00000140  FCTL1                                  
 00000141  FCTL1_H                                
 00000140  FCTL1_L                                
@@ -767,7 +767,7 @@ address   name
 0000019a  SYSUNIV                                
 0000019b  SYSUNIV_H                              
 0000019a  SYSUNIV_L                              
-000107d0  SetTCLK                                
+000107de  SetTCLK                                
 00000352  TA0CCR0                                
 00000354  TA0CCR1                                
 00000356  TA0CCR2                                
@@ -1060,15 +1060,15 @@ address   name
 0000015c  WDTCTL_L                               
 00004400  __STACK_END                            
 000000a0  __STACK_SIZE                           
-000044a0  __TI_CINIT_Base                        
-000044b0  __TI_CINIT_Limit                       
-000044b0  __TI_CINIT_Warm                        
-00004488  __TI_Handler_Table_Base                
-00004494  __TI_Handler_Table_Limit               
+000044ae  __TI_CINIT_Base                        
+000044be  __TI_CINIT_Limit                       
+000044be  __TI_CINIT_Warm                        
+00004496  __TI_Handler_Table_Base                
+000044a2  __TI_Handler_Table_Limit               
 00004468  __TI_ISR_TRAP                          
-00010530  __TI_auto_init_nobinit_nopinit_hold_wdt
-000103e2  __TI_decompress_lzss                   
-0001078c  __TI_decompress_none                   
+0001057a  __TI_auto_init_nobinit_nopinit_hold_wdt
+00010428  __TI_decompress_lzss                   
+00010798  __TI_decompress_none                   
 0000ffd2  __TI_int41                             
 0000ffd4  __TI_int42                             
 0000ffd6  __TI_int43                             
@@ -1094,41 +1094,41 @@ address   name
 ffffffff  __TI_pprof_out_hndl                    
 ffffffff  __TI_prof_data_size                    
 ffffffff  __TI_prof_data_start                   
-000106c0  __TI_zero_init_nomemset                
+000106cc  __TI_zero_init_nomemset                
 ffffffff  __c_args__                             
-000107b6  __mspabi_slli                          
-000107ac  __mspabi_srai                          
-000107c0  __mspabi_srli                          
+000107c2  __mspabi_slli                          
+000107b8  __mspabi_srai                          
+000107cc  __mspabi_srli                          
 0000444c  _c_int00_noargs                        
 0000fffe  _reset_vector                          
 00004360  _stack                                 
-000107fe  _system_post_cinit                     
-000107fa  _system_pre_init                       
-000107d6  abort                                  
+00010816  _system_post_cinit                     
+00010812  _system_pre_init                       
+000107ee  abort                                  
 00004400  bc_uart_irq                            
-000107dc  clear_uart_rx_interrupt_flag           
-000107e2  clear_uart_tx_interrupt_flag           
-000106e4  clock                                  
-000107e8  enable_uart_tx_interrupt               
-00010638  getDevice                              
-0001066c  haltCPU                                
-00010354  initFSM                                
-0001020e  main                                   
-00010764  memcpy                                 
-00010458  print                                  
-000102b2  print_hex                              
-00010584  readMem                                
-00010706  releaseCPU                             
-00010728  releaseDevice                          
-000105c6  setInstrFetch                          
-00010696  setLevel                               
-00010602  slowClock                              
-000104c8  uart_config                            
-000107ee  usci_reset                             
-000107f4  usci_start                             
-0001079e  use_bc_uart_pins                       
-0001074a  wait_print                             
-00010778  wait_print_hex                         
+000107f4  clear_uart_rx_interrupt_flag           
+000107fa  clear_uart_tx_interrupt_flag           
+000106f0  clock                                  
+00010800  enable_uart_tx_interrupt               
+000106a6  getDevice                              
+00010652  haltCPU                                
+0001039a  initFSM                                
+0001024a  main                                   
+00010770  memcpy                                 
+0001049e  print                                  
+000102f8  print_hex                              
+000105ce  readMem                                
+00010712  releaseCPU                             
+00010734  releaseDevice                          
+000107e6  releaseFSM                             
+0001067c  setLevel                               
+0001061c  slowClock                              
+0001050e  uart_config                            
+00010806  usci_reset                             
+0001080c  usci_start                             
+000107aa  use_bc_uart_pins                       
+00010756  wait_print                             
+00010784  wait_print_hex                         
 
 
 GLOBAL SYMBOLS: SORTED BY Symbol Address 
@@ -1871,11 +1871,11 @@ address   name
 00004400  bc_uart_irq                            
 0000444c  _c_int00_noargs                        
 00004468  __TI_ISR_TRAP                          
-00004488  __TI_Handler_Table_Base                
-00004494  __TI_Handler_Table_Limit               
-000044a0  __TI_CINIT_Base                        
-000044b0  __TI_CINIT_Limit                       
-000044b0  __TI_CINIT_Warm                        
+00004496  __TI_Handler_Table_Base                
+000044a2  __TI_Handler_Table_Limit               
+000044ae  __TI_CINIT_Base                        
+000044be  __TI_CINIT_Limit                       
+000044be  __TI_CINIT_Warm                        
 0000ffd2  __TI_int41                             
 0000ffd4  __TI_int42                             
 0000ffd6  __TI_int43                             
@@ -1900,43 +1900,43 @@ address   name
 0000fffc  __TI_int62                             
 0000fffe  _reset_vector                          
 00010000  IR_SHIFT                               
-00010112  DR_SHIFT                               
-0001020e  main                                   
-000102b2  print_hex                              
-00010354  initFSM                                
-000103e2  __TI_decompress_lzss                   
-00010458  print                                  
-000104c8  uart_config                            
-00010530  __TI_auto_init_nobinit_nopinit_hold_wdt
-00010584  readMem                                
-000105c6  setInstrFetch                          
-00010602  slowClock                              
-00010638  getDevice                              
-0001066c  haltCPU                                
-00010696  setLevel                               
-000106c0  __TI_zero_init_nomemset                
-000106e4  clock                                  
-00010706  releaseCPU                             
-00010728  releaseDevice                          
-0001074a  wait_print                             
-00010764  memcpy                                 
-00010778  wait_print_hex                         
-0001078c  __TI_decompress_none                   
-0001079e  use_bc_uart_pins                       
-000107ac  __mspabi_srai                          
-000107b6  __mspabi_slli                          
-000107c0  __mspabi_srli                          
-000107ca  ClrTCLK                                
-000107d0  SetTCLK                                
-000107d6  C$$EXIT                                
-000107d6  abort                                  
-000107dc  clear_uart_rx_interrupt_flag           
-000107e2  clear_uart_tx_interrupt_flag           
-000107e8  enable_uart_tx_interrupt               
-000107ee  usci_reset                             
-000107f4  usci_start                             
-000107fa  _system_pre_init                       
-000107fe  _system_post_cinit                     
+00010130  DR_SHIFT                               
+0001024a  main                                   
+000102f8  print_hex                              
+0001039a  initFSM                                
+00010428  __TI_decompress_lzss                   
+0001049e  print                                  
+0001050e  uart_config                            
+0001057a  __TI_auto_init_nobinit_nopinit_hold_wdt
+000105ce  readMem                                
+0001061c  slowClock                              
+00010652  haltCPU                                
+0001067c  setLevel                               
+000106a6  getDevice                              
+000106cc  __TI_zero_init_nomemset                
+000106f0  clock                                  
+00010712  releaseCPU                             
+00010734  releaseDevice                          
+00010756  wait_print                             
+00010770  memcpy                                 
+00010784  wait_print_hex                         
+00010798  __TI_decompress_none                   
+000107aa  use_bc_uart_pins                       
+000107b8  __mspabi_srai                          
+000107c2  __mspabi_slli                          
+000107cc  __mspabi_srli                          
+000107d6  ClrTCLK                                
+000107de  SetTCLK                                
+000107e6  releaseFSM                             
+000107ee  C$$EXIT                                
+000107ee  abort                                  
+000107f4  clear_uart_rx_interrupt_flag           
+000107fa  clear_uart_tx_interrupt_flag           
+00010800  enable_uart_tx_interrupt               
+00010806  usci_reset                             
+0001080c  usci_start                             
+00010812  _system_pre_init                       
+00010816  _system_post_cinit                     
 ffffffff  __TI_pprof_out_hndl                    
 ffffffff  __TI_prof_data_size                    
 ffffffff  __TI_prof_data_start                   

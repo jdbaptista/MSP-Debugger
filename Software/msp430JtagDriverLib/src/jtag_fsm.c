@@ -135,6 +135,10 @@ uint8_t IR_SHIFT(uint8_t input_data) {
     JTAGOUT &= ~TMS;
     clock(&JTAGOUT, TCK);    // (0) FSM: IDLE
 
+    for (i = 0; i < 4; i++) {
+        clock(&JTAGOUT, TCK);
+    }
+
     return output_data;
 }
 
@@ -178,16 +182,20 @@ uint16_t DR_SHIFT(uint16_t input_data) {
     JTAGOUT |= TMS;
     setLevel(&JTAGOUT, TDI, bit);
     clock(&JTAGOUT, TCK);    // (1) FSM: Exit-DR
-
     if ((JTAGIN & TDO) == 0) {
-        output_data &= (uint16_t) ~1;
+        output_data &= ~1;
     } else {
-        output_data |= (uint16_t) 1;
+        output_data |= 1;
     }
+
     setLevel(&JTAGOUT, TDI, prev_TDI);
     clock(&JTAGOUT, TCK);    // (1) FSM: Update-DR
     JTAGOUT &= ~TMS;
     clock(&JTAGOUT, TCK);    // (0) FSM: IDLE
+
+    for (i = 0; i < 4; i++) {
+        clock(&JTAGOUT, TCK);
+    }
 
     return output_data;
 }
@@ -196,12 +204,16 @@ uint16_t DR_SHIFT(uint16_t input_data) {
  * Sets TCLK to 1.
  */
 inline void SetTCLK() {
-    JTAGOUT |= TCK;
+    JTAGOUT |= TDI;
 }
 
 /*
  * Sets TCLK to 0.
  */
 inline void ClrTCLK() {
-    JTAGOUT &= ~TCK;
+    JTAGOUT &= ~TDI;
+}
+
+void releaseFSM() {
+    JTAGOUT &= ~TEST;
 }

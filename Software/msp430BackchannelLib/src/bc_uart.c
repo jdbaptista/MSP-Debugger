@@ -49,6 +49,7 @@ bool uart_config(void) {
     BCCTL0 &= ~UCMSB; // LSB first
     BCCTL0 &= ~UCMODE0; // UART mode (00)
     BCCTL0 &= ~UCMODE1;
+    BCCTL0 |= UCSPB; // two stop bits
 
     // Set baud rate to 9600 (br = 104, brs = 1, brf = 0) for smclk
     BCBR0 = 104;

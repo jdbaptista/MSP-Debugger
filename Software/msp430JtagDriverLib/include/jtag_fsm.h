@@ -24,6 +24,7 @@ uint8_t IR_SHIFT(uint8_t input_data);
 uint16_t DR_SHIFT(uint16_t input_data);
 inline void SetTCLK();
 inline void ClrTCLK();
+void releaseFSM();
 
 // JTAG Instructions: (pg. 14)
 

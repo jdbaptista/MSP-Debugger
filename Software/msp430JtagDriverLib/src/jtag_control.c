@@ -20,7 +20,6 @@ void getDevice() {
     IR_SHIFT(IR_CNTRL_SIG_16BIT);
     DR_SHIFT(0x2401);
     IR_SHIFT(IR_CNTRL_SIG_CAPTURE);
-    volatile uint16_t output = DR_SHIFT(0);
     while (!(DR_SHIFT(0) & BIT9)) {} // wait for sync
 }
 
@@ -142,7 +141,8 @@ uint16_t readMem(uint16_t address) {
     IR_SHIFT(IR_DATA_TO_ADDR);
     SetTCLK();
     ClrTCLK();
-    return DR_SHIFT(0);
+    volatile uint16_t output = DR_SHIFT(0);
+    return output;
 }
 
 /*
@@ -153,7 +153,7 @@ uint16_t readMem(uint16_t address) {
  * complete, releaseCPU() should be called to return the
  * target CPU to normal operation.
  */
-uint16_t writeMem(uint16_t address, uint16_t data) {
+void writeMem(uint16_t address, uint16_t data) {
     ClrTCLK();
     IR_SHIFT(IR_CNTRL_SIG_16BIT);
     DR_SHIFT(0x2408); // write one word to memory. For a

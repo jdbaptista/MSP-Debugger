@@ -9,12 +9,9 @@
 
 inline void initBackchannel() {
     WDTCTL = WDTPW | WDTHOLD; // stop watchdog timer
-    // setup backchannel at 9600 baud
+    // setup backchannel at 9600 baud, 2 stop bits
     usci_reset();
-    // source UCSI from SMCLK
     BCCTL1 |= UCSSEL__SMCLK;
-//    BCCTL1 &= ~(BIT7 | BIT6);
-//    BCCTL1 |= UCSSEL__ACLK;
     use_bc_uart_pins();
     uart_config();
     usci_start();
@@ -30,29 +27,28 @@ inline void initBackchannel() {
  */
 int main(void)
 {
-    WDTCTL = WDTPW | WDTHOLD;   // stop watchdog timer
-
     initBackchannel();
     initFSM();
     getDevice();
-    setInstrFetch();
     haltCPU();
+    wait_print("starting...");
 
     uint16_t i;
-    for (i = 0xBFF0; i >= 0xB000; i -= 16) {
-        wait_print_hex(i + 0x100F);
-        wait_print(": ");
-
+    for (i = 0xC000; i <= 0xE000; i += 0x1000) {
         uint16_t j;
-        for (j = 0x100F; j >= 0x1000; j--) {
-            wait_print_hex(readMem(i + j));
+        for (j = i; j < i + 0x1000; j += 4) {
+            if ((j) % 64 == 0) {
+                wait_print("\033[E"); // newline command
+                wait_print_hex(j);
+                wait_print(": ");
+            }
+            volatile uint16_t output = readMem(j);
+            wait_print_hex(output);
             wait_print(" ");
         }
-
-//        wait_print("\033[E"); // newline command
-        wait_print("\n");
     }
 
     releaseCPU();
     releaseDevice();
+    releaseFSM();
 }
