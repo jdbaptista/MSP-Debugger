@@ -1,6 +1,0 @@
-"./src/main.obj"
-"../lnk_msp430f5529.cmd"
--llibmath.a
--lmsp430BackchannelLib.lib
--lmsp430JtagDriverLib.lib
--llibc.a

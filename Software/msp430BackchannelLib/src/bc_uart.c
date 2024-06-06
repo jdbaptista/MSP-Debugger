@@ -23,6 +23,17 @@
  *      - USCI clock source is SMCLK
  */
 bool uart_config(void) {
+#ifdef __MSP430G2553__
+    // use calibrated DCO for more accurate clock
+    if (CALBC1_1MHZ==0xFF)                  // If calibration constant erased
+    {
+        while(1);                               // do not load, trap CPU!!
+    }
+    DCOCTL = 0;                               // Select lowest DCOx and MODx settings
+    BCSCTL1 = CALBC1_1MHZ;                    // Set DCO
+    DCOCTL = CALDCO_1MHZ;
+#endif
+
     // check that USCI is in reset mode
     unsigned char reset_high = BCCTL1 & UCSWRST;
     if (!reset_high) {
@@ -34,12 +45,6 @@ bool uart_config(void) {
     if (clk_sel_bits != 0x80 && clk_sel_bits != 0xC0) {
         return 0;
     }
-
-//    // check USCI clock source is ACLK
-//    unsigned char clk_sel_bits = BCCTL1 & (UCSSEL0 | UCSSEL1);
-//    if (clk_sel_bits != 0x40) {
-//        return 0;
-//    }
 
     // set USCI module to UART mode
     BCCTL0 &= ~UCSYNC;
@@ -56,21 +61,22 @@ bool uart_config(void) {
     BCBR1 = 0;
     BCMCTL = 0x02; // UCBRSx = 1
 
-//    // Set baud rate to 1200 (br = 27, brs = 2, brf = 0) for aclk
-//    BCBR0 = 27;
-//    BCBR1 = 0;
-//    BCMCTL = 0x04; // UCBRSx = 2
-
     return 1;
 }
 
 inline void use_bc_uart_pins(void) {
+#ifdef __MSP430F5529__
     // backchannel uart pins on
     // msp-exp430f5529lp
     P4SEL |= 0x18;
-    P4DIR |= BIT4 + BIT5;
-//    P3SEL |= 0x18;
-//    P3DIR |= BIT3 + BIT4;
+    P4DIR |= BIT4 + BIT5; //TODO: fix this
+#endif
+
+#ifdef __MSP430G2553__
+    P1SEL |= BIT1 + BIT2;
+    P1SEL2 |= BIT1 + BIT2;
+    P1DIR |= BIT1 + BIT2; //TODO: fix this
+#endif
 }
 
 
@@ -85,30 +91,62 @@ inline void usci_start(void) {
 
 
 inline void enable_uart_tx_interrupt(void) {
+#ifdef __MSP430F5529__
     BCIE |= UCTXIE;
+#endif
+#ifdef __MSP430G2553__
+    BCIE |= UCA0TXIE;
+#endif
 }
 
 
 inline void disable_uart_tx_interrupt(void) {
+#ifdef __MSP430F5529__
     BCIE &= ~UCTXIE;
+#endif
+#ifdef __MSP430G2553__
+    BCIE &= ~UCA0TXIE;
+#endif
 }
 
 
 inline void enable_uart_rx_interrupt(void) {
+#ifdef __MSP430F5529__
     BCIE |= UCRXIE;
+#endif
+#ifdef __MSP430G2553__
+    BCIE |= UCA0RXIE;
+#endif
 }
 
 
 inline void disable_uart_rx_interrupt(void) {
+#ifdef __MSP430F5529__
     BCIE &= ~UCRXIE;
+#endif
+#ifdef __MSP430G2553__
+    BCIE &= ~UCA0RXIE;
+#endif
 }
 
 inline void clear_uart_tx_interrupt_flag(void) {
+#ifdef __MSP430F5529__
     BCIFG &= ~UCTXIFG;
+#endif
+#ifdef __MSP430G2553__
+    BCIFG &= ~UCA0TXIFG;
+    BCIFG &= ~UCB0TXIFG; // may be lingering
+#endif
 }
 
 inline void clear_uart_rx_interrupt_flag(void) {
+#ifdef __MSP430F5529__
     BCIFG &= ~UCRXIFG;
+#endif
+#ifdef __MSP430G2553__
+    BCIFG &= ~UCA0RXIFG;
+    BCIFG &= ~UCB0RXIFG;
+#endif
 }
 
 
@@ -128,9 +166,9 @@ static char bc_buffer[BC_BUFFER_SIZE]; // should always be null terminated!
 static int curr_bc_buffer_ndx = -1; // -1 indicates no current string transmission,
                                     // otherwise indicates the index of the
                                     // previously transmitted character.
-
 #pragma vector=BC_INT_VEC
 interrupt void bc_uart_irq(void) {
+#ifdef __MSP430F5529__
    switch(__even_in_range(BCIV, 4)) {
        case 0: break; // no interrupt
        case 2: // data recieved
@@ -150,6 +188,16 @@ interrupt void bc_uart_irq(void) {
            break;
        default: break;
    }
+#endif
+#ifdef __MSP430G2553__
+   clear_uart_tx_interrupt_flag();
+   if (bc_buffer[curr_bc_buffer_ndx + 1] == 0) {
+       curr_bc_buffer_ndx = -1;
+   } else {
+       curr_bc_buffer_ndx++;
+       BCTXBUF = bc_buffer[curr_bc_buffer_ndx];
+   }
+#endif
 }
 
 /**

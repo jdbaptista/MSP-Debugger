@@ -1,7 +1,7 @@
-#include <bc_uart.h>
 #include <msp430.h>
 #include <stdbool.h>
 #include "tests.h"
+#include "bc_uart.h"
 
 
 
@@ -20,15 +20,13 @@ inline void setup() {
     // setup backchannel at 9600 baud
     usci_reset();
     // source UCSI from SMCLK
-    BCCTL1 |= UCSSEL__SMCLK;
+    BCCTL1 |= UCSSEL_3;
     use_bc_uart_pins();
     uart_config();
     usci_start();
     enable_uart_tx_interrupt();
     clear_uart_tx_interrupt_flag();
     __bis_SR_register(GIE);
-    wait_print("\033[2J"); // clear screen command
-    wait_print("\033[H"); // home cursor command
 }
 
 /**

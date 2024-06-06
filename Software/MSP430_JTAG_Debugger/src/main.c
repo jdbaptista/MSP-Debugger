@@ -11,7 +11,7 @@ inline void initBackchannel() {
     WDTCTL = WDTPW | WDTHOLD; // stop watchdog timer
     // setup backchannel at 9600 baud, 2 stop bits
     usci_reset();
-    BCCTL1 |= UCSSEL__SMCLK;
+    BCCTL1 |= UCSSEL_3; // set uart to use SMCLK
     use_bc_uart_pins();
     uart_config();
     usci_start();
@@ -31,7 +31,6 @@ int main(void)
     initFSM();
     getDevice();
     haltCPU();
-    wait_print("starting...");
 
     uint16_t i;
     for (i = 0xC000; i <= 0xE000; i += 0x1000) {

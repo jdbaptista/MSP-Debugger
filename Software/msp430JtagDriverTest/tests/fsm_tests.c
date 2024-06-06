@@ -37,13 +37,5 @@ bool test_ir_mab(void) {
         return false;
     }
 
-    // I'm not sure what the expected
-    // behavior of IR_ADDR_CAPTURE is,
-    // but it isn't doing what I think
-    // it should be doing so I will not
-    // write a test for it. It's usually
-    // something around 0xC008, but I
-    // can't seem to control the output.
-
     return true;
 }

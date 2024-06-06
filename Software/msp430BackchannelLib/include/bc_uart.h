@@ -12,7 +12,6 @@
 #include <stdint.h>
 #include "bc_config.h"
 
-#define USE_BC_IRQ // sets the interrupt handler
 #define BC_BUFFER_SIZE 128
 
 
