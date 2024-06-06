@@ -1,0 +1,7 @@
+"./main.obj"
+"./tests/control_tests.obj"
+"./tests/fsm_tests.obj"
+"../lnk_msp430g2553.cmd"
+-lmsp430JtagDriverLib.lib
+-lmsp430BackchannelLib.lib
+-llibc.a
