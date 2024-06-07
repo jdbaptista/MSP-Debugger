@@ -15,6 +15,11 @@ Below is an example of the flash memory content of an MSP430G2553 that contains 
 >0xC0A0: 0xFFFF 0xFFFF 0xFFFF 0xFFFF 0xFFFF 0xFFFF 0xFFFF 0xFFFF\
 >0xC0B0: 0xFFFF 0xFFFF 0xFFFF 0xFFFF 0xFFFF 0xFFFF 0xFFFF 0xFFFF
 
+As shown by CCS, the disassembly of this memory is
+
+![Screenshot 2024-06-07 110309](https://github.com/jdbaptista/MSP-Debugger/assets/18275346/934aa8e5-8492-48f7-af5f-b9dc697ad072)
+
+
 In Progress Features in order of precedence:
 - Debounced Switches
 - Disassembler
