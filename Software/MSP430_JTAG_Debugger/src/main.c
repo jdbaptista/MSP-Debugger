@@ -6,6 +6,7 @@
 #include "bc_uart.h"
 #include "jtag_fsm.h"
 #include "jtag_control.h"
+#include "disassembler.h"
 
 inline void initBackchannel() {
     WDTCTL = WDTPW | WDTHOLD; // stop watchdog timer
@@ -18,8 +19,8 @@ inline void initBackchannel() {
     enable_uart_tx_interrupt();
     clear_uart_tx_interrupt_flag();
     __bis_SR_register(GIE);
-//    wait_print("\033[2J"); // clear screen command
-//    wait_print("\033[H"); // home cursor command
+    wait_print("\033[2J"); // clear screen command
+    wait_print("\033[H"); // home cursor command
 }
 
 /**
@@ -27,17 +28,38 @@ inline void initBackchannel() {
  */
 int main(void)
 {
+    uint16_t bytes[3];
+    uint16_t curr_addr = 0xC000;
+    char assembly[31];
     initBackchannel();
     initFSM();
     getDevice();
     haltCPU();
 
-    uint16_t i;
-    for (i = 0xC000; i <= 0xFFFF; i += 2) {
-        wait_print_hex(i);
-        wait_print(": ");
-        wait_print_hex(readMem(i));
-        wait_print("\033[E"); // newline command
+    bytes[0] = readMem(curr_addr);
+    bytes[1] = readMem(curr_addr + 2);
+    bytes[2] = readMem(curr_addr + 4);
+
+    while (curr_addr >= 0xC000) { // continue until overflow
+        uart_wait(); // for easy debugging
+        int numBytes = nextInstruction(assembly, curr_addr, bytes, &curr_addr);
+        if (numBytes > 0) {
+            wait_print_hex(curr_addr);
+            wait_print(": ");
+            unsigned int i;
+            for (i = 0; i < numBytes; i++) {
+                wait_print_hex(bytes[i]);
+                wait_print(" ");
+            }
+            wait_print("\033[E");
+            wait_print(assembly);
+            wait_print("\033[E");
+            wait_print("\033[E");
+        }
+
+        bytes[0] = readMem(curr_addr);
+        bytes[1] = readMem(curr_addr + 2);
+        bytes[2] = readMem(curr_addr + 4);
     }
 
     releaseCPU();

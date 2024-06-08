@@ -29,10 +29,10 @@
  * @param next_addr: A pointer to where this function should return the memory location of the
  *                   next instruction to decode, necessary because of variable length instructions.
  *
- * Returns: True if this function executed successfully. False if an error occurred, in which case
- *          next_addr equals start_addr + 4 and result stores "ERROR".
+ * Returns: The number of 16-bit words the assembly instruction 'consumed'. Returns -1 if an error
+ *          occurred, in which case next_addr equals start_addr + 2 and result stores "ERROR".
  */
-bool nextInstruction(char* result, uint16_t start_addr, uint16_t *byte_code, uint16_t *next_addr) {
+int nextInstruction(char* result, uint16_t start_addr, uint16_t *byte_code, uint16_t *next_addr) {
     uint16_t op_bytes = byte_code[0];
     uint16_t srcOffset = byte_code[1];
     uint16_t destOffset = byte_code[2];
@@ -58,25 +58,45 @@ bool nextInstruction(char* result, uint16_t start_addr, uint16_t *byte_code, uin
             strcat(result, ".W ");
         }
 
-        if (srcMode != INDEXED) {
+        parseRegisterNum(srcRegStr, srcReg);
+        parseRegisterNum(destRegStr, destReg);
+
+        // handle immediate mode and constant generators
+        if (!(srcMode == AUTOINCREMENT && srcReg == 0) &&
+                (srcMode != INDEXED || srcReg == 3)) {
+            // this case handles non immediate mode,
+            // non indexed mode, non constant generator cases
             destOffset = byte_code[1];
         }
 
-        parseRegisterNum(srcRegStr, srcReg);
-        parseRegisterNum(destRegStr, destReg);
         uintToHex(srcOffsetStr, srcOffset);
         uintToHex(destOffsetStr, destOffset);
 
-        appendOperand(result, srcRegStr, srcMode, srcOffsetStr);
+        if ((srcMode == AUTOINCREMENT && srcReg == 0) || srcReg == 2 || srcReg == 3) {
+            appendConstant(result, srcReg, srcMode, srcOffsetStr);
+        } else if (srcMode == INDEXED && (srcReg == 0 || srcReg == 2)) {
+            appendPointer(result, srcRegStr, start_addr, srcReg, srcOffset);
+        } else {
+            appendOperand(result, srcRegStr, srcMode, srcOffsetStr);
+        }
         strcat(result, " ");
-        appendOperand(result, destRegStr, destMode, destOffsetStr);
+        if (destMode == INDEXED && (destReg == 0 || destReg == 2)) {
+            appendPointer(result, destRegStr, start_addr, destReg, destOffset);
+        } else {
+            appendOperand(result, destRegStr, destMode, destOffsetStr);
+        }
 
-        if (srcMode == INDEXED && destMode == INDEXED) {
+        if ((srcMode == INDEXED && destMode == INDEXED && srcReg != 3) ||
+            (srcMode == AUTOINCREMENT && srcReg == 0 && destMode == INDEXED))
+        {
             *next_addr = start_addr + 6;
-        } else if (srcMode == INDEXED || destMode == INDEXED) {
+            return 3;
+        } else if ((srcMode == INDEXED && srcReg != 3) || destMode == INDEXED) {
             *next_addr = start_addr + 4;
+            return 2;
         } else {
             *next_addr = start_addr + 2;
+            return 1;
         }
         break;
     }
@@ -95,12 +115,20 @@ bool nextInstruction(char* result, uint16_t start_addr, uint16_t *byte_code, uin
         parseRegisterNum(srcRegStr, srcReg);
         uintToHex(srcOffsetStr, srcOffset);
 
-        appendOperand(result, srcRegStr, srcMode, srcOffsetStr);
+        if (srcReg < 4) { //TODO: double check this for immediate mode
+            appendConstant(result, srcReg, srcMode, srcOffsetStr);
+        } else if (srcMode == INDEXED && (srcReg == 0 || srcReg == 2)) {
+            appendPointer(result, srcRegStr, start_addr, srcReg, srcOffset);
+        } else {
+            appendOperand(result, srcRegStr, srcMode, srcOffsetStr);
+        }
 
-        if (srcMode == INDEXED) {
+        if (srcMode == INDEXED && srcReg != 3) {
             *next_addr = start_addr + 4;
+            return 2;
         } else {
             *next_addr = start_addr + 2;
+            return 1;
         }
         break;
     }
@@ -111,15 +139,75 @@ bool nextInstruction(char* result, uint16_t start_addr, uint16_t *byte_code, uin
         strcat(result, srcOffsetStr);
 
         *next_addr = start_addr + 2;
+        return 1;
         break;
     }
     default: {
         *next_addr = start_addr + 2;
-        return false;
+        return -1;
     }
     }
 
-    return true;
+    return -1; // should not end up here
+}
+
+/**
+ * Fills the place of appendOperand for constant generator registers 2 and 3,
+ * either appending the correct constant or, in the case of 2 (SR), potentially
+ * appending a simple register operand. Does not append a space!
+ */
+void appendConstant(char* result, uint16_t reg, addressingMode mode, char* offset) {
+    // handle immediate mode
+    if (reg == 0 && mode == AUTOINCREMENT) {
+        strcat(result, "#");
+        strcat(result, offset);
+        return;
+    }
+    // handle constant generators
+    switch (mode) {
+    case REGISTER:
+        if (reg == 2) {
+            strcat(result, "SR");
+        } else if (reg == 3) {
+            strcat(result, "#0");
+        }
+        break;
+    case INDEXED:
+        if (reg == 2) {
+            strcat(result, "#");
+            strcat(result, offset);
+        } else if (reg == 3) {
+            strcat(result, "#1");
+        }
+        break;
+    case INDIRECT:
+        if (reg == 2) {
+            strcat(result, "#4");
+        } else if (reg == 3) {
+            strcat(result, "#2");
+        }
+        break;
+    case AUTOINCREMENT:
+        if (reg == 2) {
+            strcat(result, "#8");
+        } else if (reg == 3) {
+            strcat(result, "#0xFFFF");
+        }
+        break;
+    default:
+        break;
+    }
+}
+
+void appendPointer(char* result, char* regStr, uint16_t pc, uint16_t reg, uint16_t offset) {
+    if (reg == 0) { // R0/PC -> symbolic
+        uintToHex(regStr, pc + offset);
+        strcat(result, regStr);
+    } else if (reg == 2) {
+        uintToHex(regStr, offset);
+        strcat(result, "&");
+        strcat(result, regStr);
+    }
 }
 
 /**
@@ -131,14 +219,10 @@ void appendOperand(char* result, char* reg, addressingMode mode, char* offset) {
             strcat(result, reg); // result: "R15"
             break;
         case INDEXED:
-            if (offset == NULL) {
-                strcat(result, "ERROR");
-            } else {
-                strcat(result, offset);
-                strcat(result, "(");
-                strcat(result, reg);
-                strcat(result, ")"); // result: "0xFFFF(R15)"
-            }
+            strcat(result, offset);
+            strcat(result, "(");
+            strcat(result, reg);
+            strcat(result, ")"); // result: "0xFFFF(R15)"
             break;
         case INDIRECT:
             strcat(result, "@");
