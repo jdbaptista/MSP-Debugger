@@ -11,11 +11,115 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "include/disassembler.h"
+#include "disassembler.h"
+#include "masks.h"
+#include "types.h"
 
-bool bytesToInstructions(char *result[], uint16_t *stop_addr, uint16_t byte_code[], uint16_t address) {
-    // TODO: Implement function
-    return false;
+
+/**
+ * Fills result with the string assembly instruction of the instruction beginning at start_addr,
+ * which should correspond to the first word presented in byte_code. The function returns the
+ * next assembly instruction address in next_addr because the byte length of instructions varies
+ * depending on register addressing modes used.
+ *
+ * @param result: A string buffer of minimum length 31 that will store the assembly instruction.
+ * @param start_addr: The location in memory of the instruction to decode.
+ * @param byte_code: An array of 3 16-bit words corresponding to the memory beginning at start_addr.
+ *                   Remains unchanged over this function's execution.
+ * @param next_addr: A pointer to where this function should return the memory location of the
+ *                   next instruction to decode, necessary because of variable length instructions.
+ *
+ * Returns: True if this function executed successfully. False if an error occurred, in which case
+ *          next_addr equals start_addr + 4 and result stores "ERROR".
+ */
+bool nextInstruction(char* result, uint16_t start_addr, uint16_t *byte_code, uint16_t *next_addr) {
+    uint16_t op_bytes = byte_code[0];
+    uint16_t srcOffset = byte_code[1];
+    uint16_t destOffset = byte_code[2];
+    char srcRegStr[4];
+    char srcOffsetStr[7];
+    char destRegStr[4];
+    char destOffsetStr[7];
+
+    opCode op = getOpCode(op_bytes);
+    strcpy(result, op.repr);
+
+    switch(op.format) {
+    case DOUBLE: {
+        addressingMode srcMode = getSourceRegisterMode(op_bytes, DOUBLE);
+
+        addressingMode destMode = getDestRegisterMode(op_bytes);
+        uint16_t srcReg = getSourceRegister(op_bytes, DOUBLE);
+        uint16_t destReg = getDestRegister(op_bytes);
+
+        if (isByteOperation(op_bytes)) {
+            strcat(result, ".B ");
+        } else {
+            strcat(result, ".W ");
+        }
+
+        if (srcMode != INDEXED) {
+            destOffset = byte_code[1];
+        }
+
+        parseRegisterNum(srcRegStr, srcReg);
+        parseRegisterNum(destRegStr, destReg);
+        uintToHex(srcOffsetStr, srcOffset);
+        uintToHex(destOffsetStr, destOffset);
+
+        appendOperand(result, srcRegStr, srcMode, srcOffsetStr);
+        strcat(result, " ");
+        appendOperand(result, destRegStr, destMode, destOffsetStr);
+
+        if (srcMode == INDEXED && destMode == INDEXED) {
+            *next_addr = start_addr + 6;
+        } else if (srcMode == INDEXED || destMode == INDEXED) {
+            *next_addr = start_addr + 4;
+        } else {
+            *next_addr = start_addr + 2;
+        }
+        break;
+    }
+    case SINGLE: {
+        // the documentation calls this the destination,
+        // however it aligns with src more accurately.
+        addressingMode srcMode = getSourceRegisterMode(op_bytes, SINGLE);
+        uint16_t srcReg = getSourceRegister(op_bytes, SINGLE);
+
+        if (isByteOperation(op_bytes)) {
+            strcat(result, ".B ");
+        } else {
+            strcat(result, ".W ");
+        }
+
+        parseRegisterNum(srcRegStr, srcReg);
+        uintToHex(srcOffsetStr, srcOffset);
+
+        appendOperand(result, srcRegStr, srcMode, srcOffsetStr);
+
+        if (srcMode == INDEXED) {
+            *next_addr = start_addr + 4;
+        } else {
+            *next_addr = start_addr + 2;
+        }
+        break;
+    }
+    case JUMP: {
+        uint16_t pcNew = getJumpLocation(op_bytes, start_addr);
+        uintToHex(srcOffsetStr, pcNew); // use srcOffsetStr to save memory
+        strcat(result, " ");
+        strcat(result, srcOffsetStr);
+
+        *next_addr = start_addr + 2;
+        break;
+    }
+    default: {
+        *next_addr = start_addr + 2;
+        return false;
+    }
+    }
+
+    return true;
 }
 
 /**
@@ -33,72 +137,23 @@ void appendOperand(char* result, char* reg, addressingMode mode, char* offset) {
                 strcat(result, offset);
                 strcat(result, "(");
                 strcat(result, reg);
-                strcat(result, ")"); // result: "FFFFh(R15)"
+                strcat(result, ")"); // result: "0xFFFF(R15)"
             }
             break;
         case INDIRECT:
-            strcpy(result, "@");
-            strcpy(result, reg); // result: "@R15"
+            strcat(result, "@");
+            strcat(result, reg); // result: "@R15"
             break;
         case AUTOINCREMENT:
-            strcpy(result, "@");
-            strcpy(result, reg);
-            strcpy(result, "+"); // result: "@R15+"
+            strcat(result, "@");
+            strcat(result, reg);
+            strcat(result, "+"); // result: "@R15+"
             break;
         default:
-            strcpy(result, "ERROR"); // ADDRESSINGERROR
+            strcat(result, "ERROR"); // ADDRESSINGERROR
             break;
     }
 }
-
-void getAsm(char* result, uint16_t byteCode, opCode* opCode, uint16_t currAddress, char* srcOffset, char* destOffset) {
-    if (opCode->format == FORMATERROR) {
-        strcpy(result, opCode->repr);
-        return;
-    }
-    strcpy(result, opCode->repr); // result: "MOV"
-    if (isByteOperation(byteCode)) {
-        strcat(result, ".B "); // result: "MOV.B "
-    } else {
-        strcat(result, " "); // result: "MOV "
-    }
-    switch(opCode->format) {
-        case DOUBLE: {
-            addressingMode destMode = getDestRegisterMode(byteCode, DOUBLE);
-            addressingMode srcMode = getSourceRegisterMode(byteCode, DOUBLE);
-            char* dest = (char*) calloc(5, sizeof(char));
-            char* src = (char*) calloc(5, sizeof(char));
-            parseRegisterNum(dest, getDestRegister(byteCode, DOUBLE));
-            parseRegisterNum(src, getSourceRegister(byteCode, DOUBLE));
-            appendOperand(result, src, srcMode, srcOffset);
-            strcat(result, " ");
-            appendOperand(result, dest, destMode, destOffset);
-            free(dest);
-            free(src);
-            break;
-        }
-        case SINGLE: {
-            addressingMode destMode = getDestRegisterMode(byteCode, SINGLE);
-            char* dest = (char*) calloc(5, sizeof(char));
-            parseRegisterNum(dest, getDestRegister(byteCode, SINGLE));
-            appendOperand(result, dest, destMode, destOffset);
-            free(dest);
-            break;
-        }
-        case JUMP: {
-            char* pcOffset = (char*) calloc(8, sizeof(char));
-            getJumpOffset(pcOffset, byteCode, currAddress);
-            strcat(result, pcOffset);
-            break;
-        }
-        default:
-            strcpy(result, "ERROR");
-            break;
-    }
-}
-
-
-
 
 // NOTE: order matters here! some masks are submasks of others!
 opCode getOpCode(uint16_t byteCode) {
@@ -106,7 +161,7 @@ opCode getOpCode(uint16_t byteCode) {
     //       and is made so submasks are checked late.
     unsigned int i = 0;
     opCode currCode;
-    while (true) {  // danger is my middle name
+    while (true) {
         currCode = CODES[i];
         bool doneIterating = currCode.format == FORMATERROR;
         bool isCorrectCode = (currCode.mask & byteCode) == currCode.mask;
@@ -117,10 +172,15 @@ opCode getOpCode(uint16_t byteCode) {
     }
 }
 
-addressingMode getDestRegisterMode(uint16_t byteCode, formatType type) {
-    if (type != DOUBLE) {
-        return ADDRESSINGERROR;
-    }
+/**
+ * Returns the addressing mode of the destination register, Ad, in Double-Operand
+ * instructions. If called on Jump instructions, this will return an ERROR result.
+ *
+ * NOTE: Although the User Guide specifies Single-Operand instructions to use Ad,
+ * this interface uses As instead as it lines up better with the size of
+ * Double-Operand As addressing mode bits.
+ */
+addressingMode getDestRegisterMode(uint16_t byteCode) {
     switch (byteCode & 0x0080) {
         case 0x0080:
             return INDEXED;
@@ -131,6 +191,12 @@ addressingMode getDestRegisterMode(uint16_t byteCode, formatType type) {
     }
 }
 
+/**
+ * Returns the addressing mode of the source register, As, in Double-Operand
+ * instructions and the mode of the destination register, Ad, in Single-Operand
+ * instructions. If called on Jump instructions, this will return an
+ * ERROR result.
+ */
 addressingMode getSourceRegisterMode(uint16_t byteCode, formatType type) {
     if (type != DOUBLE && type != SINGLE) {
         return ADDRESSINGERROR;
@@ -149,17 +215,22 @@ addressingMode getSourceRegisterMode(uint16_t byteCode, formatType type) {
     }
 }
 
-uint16_t getDestRegister(uint16_t byteCode, formatType type) {
-    if (type != DOUBLE) {
-        return 0;
-    }
+/**
+ * Returns the value of the destination register, D-Reg, in Double-Operand instructions.
+ * If called on Jump or Single-Operand instructions, this will result in 0.
+ */
+uint16_t getDestRegister(uint16_t byteCode) {
     return (byteCode & 0x000F);
 }
 
+/**
+ * Returns the value of the source register, S-Reg, in Single-Operand and Double-Operand
+ * instructions. If called on Jump instructions, this will result in 0.
+ */
 uint16_t getSourceRegister(uint16_t byteCode, formatType type) {
     switch (type) {
     case DOUBLE:
-        return (byteCode & 0x0F00);
+        return (byteCode & 0x0F00) >> 8;
     case SINGLE:
         return (byteCode & 0x000F);
     default:
@@ -167,45 +238,59 @@ uint16_t getSourceRegister(uint16_t byteCode, formatType type) {
     }
 }
 
-bool isByteOperation(uint16_t byteCode) {
+/**
+ * Returns true if B/W bit is high. This is meaningless in JUMP instructions.
+ */
+inline bool isByteOperation(uint16_t byteCode) {
     return (byteCode & 0x0040);
 }
 
-void getJumpOffset(char* result, uint16_t byteCode, uint16_t currAddress) {
+uint16_t getJumpLocation(uint16_t byteCode, uint16_t currAddress) {
     // create proper 16-bit offset from 10-bit signed offset
     int16_t signedOffset = (((int16_t) (byteCode & 0x03FF)) << 6) >> 6; // >> is arithmetic shift which smears sign
-    int16_t targetAddress = (uint16_t) (currAddress + 2 + (signedOffset * 2)); // addresses should not be negative
-    uintToHex(result, targetAddress);
+    int16_t targetAddress = currAddress + 2 + (signedOffset * 2); // was (uint16_t) (currAddress + 2 + (signedOffset * 2))
+    // convert to uint16_t from 2s complement
+    return (uint16_t) (~targetAddress + 1);
 }
 
+/**
+ * Converts 16-bit byte code to an offset formatted string. Used when addressing
+ * mode is indexed, so the next word is the offset.
+ */
 void byteCodeToOffset(char* result, uint16_t byteCode) {
     uintToHex(result, byteCode);
 }
 
+/**
+ * Fills result with the string representation of regNum,
+ * formatted as R15. Result should be a buffer of minimum
+ * size 4 to not overflow.
+ */
 void parseRegisterNum(char* result, uint16_t regNum) {
+    static const char* map[] = { "PC", "SP", "SR", "CG2",
+                                 "R4", "R5", "R6", "R7",
+                                 "R8", "R9", "R10", "R11",
+                                 "R12", "R13", "R14", "R15" };
     if (regNum > 15) {
-        strcat(result, "ERR");
-        return;
+        result = strcpy(result, "ERR");
+    } else {
+        result = strcpy(result, map[regNum]);
     }
-    strcpy(result, ""); // clear result just in case
-    char* map[] = { "PC", "SP", "SR", "CG2", "R4", "R5", "R6", "R7", "R8", "R9", "R10", "R11", "R12", "R13", "R14", "R15" };
-    strcat(result, map[regNum]);
-    return;
 }
 
+/**
+ * Fills result with the hexadecimal representation
+ * of input, formatted as FFFFh. Result should be a
+ * buffer of minimum size 7 to not overflow.
+ */
 void uintToHex(char* result, uint16_t input) {
     char* map = "0123456789ABCDEF";
-    strcpy(result, ""); // clear result just in case
-    int i;
-    for (i = 12; i >= 0; i -= 4) {
-        char curr[2];
-        uint16_t ndx = (input >> i);
-        ndx = (ndx << 12); // clear top bits
-        ndx = (ndx >> 12); // put target byte back to LSB
-        curr[0] = map[ndx];
-        curr[1] = '\0';
-        strcat(result, curr);
-    }
-    strcat(result, "h"); // result: FFFFh
+    result[0] = '0';
+    result[1] = 'x';
+    result[2] = map[(input >> 12) & 0x000F];
+    result[3] = map[(input >> 8) & 0x000F];
+    result[4] = map[(input >> 4) & 0x000F];
+    result[5] = map[input & 0x000F];
+    result[6] = '\0';
 }
 

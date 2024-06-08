@@ -1,0 +1,6 @@
+"./main.obj"
+"./tests/integration_tests.obj"
+"../lnk_msp430g2553.cmd"
+-lmsp430BackchannelLib.lib
+-lmsp430DisassemblerLib.lib
+-llibc.a

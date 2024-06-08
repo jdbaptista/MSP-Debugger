@@ -33,18 +33,11 @@ int main(void)
     haltCPU();
 
     uint16_t i;
-    for (i = 0xC000; i <= 0xE000; i += 0x1000) {
-        uint16_t j;
-        for (j = i; j < i + 0x1000; j += 4) {
-            if ((j) % 64 == 0) {
-                wait_print("\033[E"); // newline command
-                wait_print_hex(j);
-                wait_print(": ");
-            }
-            volatile uint16_t output = readMem(j);
-            wait_print_hex(output);
-            wait_print(" ");
-        }
+    for (i = 0xC000; i <= 0xFFFF; i += 2) {
+        wait_print_hex(i);
+        wait_print(": ");
+        wait_print_hex(readMem(i));
+        wait_print("\033[E"); // newline command
     }
 
     releaseCPU();
