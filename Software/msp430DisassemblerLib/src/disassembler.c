@@ -69,9 +69,9 @@ int nextInstruction(char* result, uint16_t start_addr, uint16_t *byte_code, uint
             destOffset = byte_code[1];
         }
 
+        // append proper source and destination operands
         uintToHex(srcOffsetStr, srcOffset);
         uintToHex(destOffsetStr, destOffset);
-
         if ((srcMode == AUTOINCREMENT && srcReg == 0) || srcReg == 2 || srcReg == 3) {
             appendConstant(result, srcReg, srcMode, srcOffsetStr);
         } else if (srcMode == INDEXED && (srcReg == 0 || srcReg == 2)) {
@@ -86,12 +86,14 @@ int nextInstruction(char* result, uint16_t start_addr, uint16_t *byte_code, uint
             appendOperand(result, destRegStr, destMode, destOffsetStr);
         }
 
+        // determine next address
         if ((srcMode == INDEXED && destMode == INDEXED && srcReg != 3) ||
             (srcMode == AUTOINCREMENT && srcReg == 0 && destMode == INDEXED))
         {
             *next_addr = start_addr + 6;
             return 3;
-        } else if ((srcMode == INDEXED && srcReg != 3) || destMode == INDEXED) {
+        } else if ((srcMode == INDEXED && srcReg != 3) || destMode == INDEXED ||
+                   (srcMode == AUTOINCREMENT && srcReg == 0)) {
             *next_addr = start_addr + 4;
             return 2;
         } else {
@@ -113,8 +115,9 @@ int nextInstruction(char* result, uint16_t start_addr, uint16_t *byte_code, uint
         }
 
         parseRegisterNum(srcRegStr, srcReg);
-        uintToHex(srcOffsetStr, srcOffset);
 
+        // append proper source operand
+        uintToHex(srcOffsetStr, srcOffset);
         if (srcReg < 4) { //TODO: double check this for immediate mode
             appendConstant(result, srcReg, srcMode, srcOffsetStr);
         } else if (srcMode == INDEXED && (srcReg == 0 || srcReg == 2)) {
@@ -122,8 +125,9 @@ int nextInstruction(char* result, uint16_t start_addr, uint16_t *byte_code, uint
         } else {
             appendOperand(result, srcRegStr, srcMode, srcOffsetStr);
         }
-
-        if (srcMode == INDEXED && srcReg != 3) {
+        // determine next address
+        if ((srcMode == INDEXED && srcReg != 3) ||
+            (srcMode == AUTOINCREMENT && srcReg == 0)) {
             *next_addr = start_addr + 4;
             return 2;
         } else {
@@ -330,11 +334,13 @@ inline bool isByteOperation(uint16_t byteCode) {
 }
 
 uint16_t getJumpLocation(uint16_t byteCode, uint16_t currAddress) {
-    // create proper 16-bit offset from 10-bit signed offset
-    int16_t signedOffset = (((int16_t) (byteCode & 0x03FF)) << 6) >> 6; // >> is arithmetic shift which smears sign
-    int16_t targetAddress = currAddress + 2 + (signedOffset * 2); // was (uint16_t) (currAddress + 2 + (signedOffset * 2))
-    // convert to uint16_t from 2s complement
-    return (uint16_t) (~targetAddress + 1);
+    uint16_t unsignedOffset = byteCode & 0x01FF; // leave sign bit off
+    if (byteCode & 0x0200) { // sign bit of offset is negative
+        unsignedOffset = (unsignedOffset ^ 0x01FF) + 1; // convert to positive offset
+        return currAddress + 2 - unsignedOffset - unsignedOffset;
+    } else {
+        return currAddress + 2 + unsignedOffset + unsignedOffset;
+    }
 }
 
 /**

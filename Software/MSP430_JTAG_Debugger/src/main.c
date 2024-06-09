@@ -42,20 +42,22 @@ int main(void)
 
     while (curr_addr >= 0xC000) { // continue until overflow
         uart_wait(); // for easy debugging
-        int numBytes = nextInstruction(assembly, curr_addr, bytes, &curr_addr);
-        if (numBytes > 0) {
-            wait_print_hex(curr_addr);
-            wait_print(": ");
-            unsigned int i;
-            for (i = 0; i < numBytes; i++) {
-                wait_print_hex(bytes[i]);
-                wait_print(" ");
-            }
-            wait_print("\033[E");
-            wait_print(assembly);
-            wait_print("\033[E");
-            wait_print("\033[E");
+
+        wait_print_hex(curr_addr);
+        if (curr_addr == 0xC028) {
+            wait_print(" ");
         }
+        int numBytes = nextInstruction(assembly, curr_addr, bytes, &curr_addr);
+        wait_print(": ");
+        unsigned int i;
+        for (i = 0; i < numBytes; i++) {
+            wait_print_hex(bytes[i]);
+            wait_print(" ");
+        }
+        wait_print("\033[E");
+        wait_print(assembly);
+        wait_print("\033[E");
+        wait_print("\033[E");
 
         bytes[0] = readMem(curr_addr);
         bytes[1] = readMem(curr_addr + 2);
