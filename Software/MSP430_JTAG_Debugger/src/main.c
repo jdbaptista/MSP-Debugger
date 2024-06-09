@@ -49,10 +49,12 @@ int main(void)
         }
         int numBytes = nextInstruction(assembly, curr_addr, bytes, &curr_addr);
         wait_print(": ");
-        unsigned int i;
-        for (i = 0; i < numBytes; i++) {
-            wait_print_hex(bytes[i]);
-            wait_print(" ");
+        if (numBytes >= 0) {
+            unsigned int i;
+            for (i = 0; i < numBytes; i++) {
+                wait_print_hex(bytes[i]);
+                wait_print(" ");
+            }
         }
         wait_print("\033[E");
         wait_print(assembly);

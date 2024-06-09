@@ -33,21 +33,19 @@
  *          occurred, in which case next_addr equals start_addr + 2 and result stores "ERROR".
  */
 int nextInstruction(char* result, uint16_t start_addr, uint16_t *byte_code, uint16_t *next_addr) {
+    int totWords = -1;
     uint16_t op_bytes = byte_code[0];
-    uint16_t srcOffset = byte_code[1];
-    uint16_t destOffset = byte_code[2];
-    char srcRegStr[4];
-    char srcOffsetStr[7];
-    char destRegStr[4];
-    char destOffsetStr[7];
+    uint16_t srcWord = byte_code[1];
+    uint16_t destWord = byte_code[2];
 
     opCode op = getOpCode(op_bytes);
     strcpy(result, op.repr);
 
     switch(op.format) {
-    case DOUBLE: {
+    case DOUBLE:
+    {
+        totWords = 1; // start 1 for opcode word
         addressingMode srcMode = getSourceRegisterMode(op_bytes, DOUBLE);
-
         addressingMode destMode = getDestRegisterMode(op_bytes);
         uint16_t srcReg = getSourceRegister(op_bytes, DOUBLE);
         uint16_t destReg = getDestRegister(op_bytes);
@@ -58,51 +56,50 @@ int nextInstruction(char* result, uint16_t start_addr, uint16_t *byte_code, uint
             strcat(result, ".W ");
         }
 
-        parseRegisterNum(srcRegStr, srcReg);
-        parseRegisterNum(destRegStr, destReg);
-
-        // handle immediate mode and constant generators
-        if (!(srcMode == AUTOINCREMENT && srcReg == 0) &&
-                (srcMode != INDEXED || srcReg == 3)) {
-            // this case handles non immediate mode,
-            // non indexed mode, non constant generator cases
-            destOffset = byte_code[1];
+        // append source operand
+        switch (appendOperand(result, start_addr, srcReg, srcWord, srcMode)) {
+        case 1: // srcWord was consumed
+        {
+            totWords++;
+            break;
         }
-
-        // append proper source and destination operands
-        uintToHex(srcOffsetStr, srcOffset);
-        uintToHex(destOffsetStr, destOffset);
-        if ((srcMode == AUTOINCREMENT && srcReg == 0) || srcReg == 2 || srcReg == 3) {
-            appendConstant(result, srcReg, srcMode, srcOffsetStr);
-        } else if (srcMode == INDEXED && (srcReg == 0 || srcReg == 2)) {
-            appendPointer(result, srcRegStr, start_addr, srcReg, srcOffset);
-        } else {
-            appendOperand(result, srcRegStr, srcMode, srcOffsetStr);
+        case 0: // srcWord was not consumed
+        {
+            destWord = srcWord;
+            break;
+        }
+        default: // an error occurred
+        {
+            strcpy(result, "ERROR");
+            *next_addr = start_addr + 2;
+            return -1;
+        }
         }
         strcat(result, " ");
-        if (destMode == INDEXED && (destReg == 0 || destReg == 2)) {
-            appendPointer(result, destRegStr, start_addr, destReg, destOffset);
-        } else {
-            appendOperand(result, destRegStr, destMode, destOffsetStr);
-        }
 
-        // determine next address
-        if ((srcMode == INDEXED && destMode == INDEXED && srcReg != 3) ||
-            (srcMode == AUTOINCREMENT && srcReg == 0 && destMode == INDEXED))
+        // append dest operand
+        switch (appendOperand(result, start_addr, destReg, destWord, destMode)) {
+        case 1: // destWord was consumed
         {
-            *next_addr = start_addr + 6;
-            return 3;
-        } else if ((srcMode == INDEXED && srcReg != 3) || destMode == INDEXED ||
-                   (srcMode == AUTOINCREMENT && srcReg == 0)) {
-            *next_addr = start_addr + 4;
-            return 2;
-        } else {
+            totWords++;
+            break;
+        }
+        case 0: // destWord was not consumed
+        {
+            break;
+        }
+        default: // an error occurred
+        {
+            strcpy(result, "ERROR");
             *next_addr = start_addr + 2;
-            return 1;
+            return -1;
+        }
         }
         break;
     }
-    case SINGLE: {
+    case SINGLE:
+    {
+        totWords = 1;
         // the documentation calls this the destination,
         // however it aligns with src more accurately.
         addressingMode srcMode = getSourceRegisterMode(op_bytes, SINGLE);
@@ -114,132 +111,167 @@ int nextInstruction(char* result, uint16_t start_addr, uint16_t *byte_code, uint
             strcat(result, ".W ");
         }
 
-        parseRegisterNum(srcRegStr, srcReg);
-
-        // append proper source operand
-        uintToHex(srcOffsetStr, srcOffset);
-        if (srcReg < 4) { //TODO: double check this for immediate mode
-            appendConstant(result, srcReg, srcMode, srcOffsetStr);
-        } else if (srcMode == INDEXED && (srcReg == 0 || srcReg == 2)) {
-            appendPointer(result, srcRegStr, start_addr, srcReg, srcOffset);
-        } else {
-            appendOperand(result, srcRegStr, srcMode, srcOffsetStr);
+        // append source operand
+        switch (appendOperand(result, start_addr, srcReg, srcWord, srcMode)) {
+        case 1: // srcWord was consumed
+        {
+            totWords++;
+            break;
         }
-        // determine next address
-        if ((srcMode == INDEXED && srcReg != 3) ||
-            (srcMode == AUTOINCREMENT && srcReg == 0)) {
-            *next_addr = start_addr + 4;
-            return 2;
-        } else {
+        case 0: // srcWord was not consumed
+        {
+            destWord = srcWord;
+            break;
+        }
+        default: // an error occurred
+        {
+            strcpy(result, "ERROR");
             *next_addr = start_addr + 2;
-            return 1;
+            return -1;
+        }
         }
         break;
     }
-    case JUMP: {
+    case JUMP:
+    {
+        totWords = 1;
         uint16_t pcNew = getJumpLocation(op_bytes, start_addr);
-        uintToHex(srcOffsetStr, pcNew); // use srcOffsetStr to save memory
+        char pcNewStr[7]; // max #0xFFFF\0"
+        uintToHex(pcNewStr, pcNew); // use srcOffsetStr to save memory
         strcat(result, " ");
-        strcat(result, srcOffsetStr);
-
-        *next_addr = start_addr + 2;
-        return 1;
+        strcat(result, pcNewStr);
         break;
     }
-    default: {
+    default:
+    {
+        break;
+    }
+    }
+
+    if (totWords == -1) { // an error has occurred
+        strcpy(result, "ERROR");
         *next_addr = start_addr + 2;
         return -1;
+    } else {
+        *next_addr = start_addr + (totWords << 1);
+        return totWords;
     }
-    }
-
-    return -1; // should not end up here
 }
 
 /**
- * Fills the place of appendOperand for constant generator registers 2 and 3,
- * either appending the correct constant or, in the case of 2 (SR), potentially
- * appending a simple register operand. Does not append a space!
+ * Appends the correct operand format based on the addressing mode
+ * to result, but does not append a space.
+ *
+ * @param result: The destination string that the operand will be
+ *                appended to.
+ * @param pc:     The program counter, ie start address, of the current
+ *                instruction. This is used in symbolic mode.
+ * @param reg:    The register number associated with the operand.
+ * @param word:   The first or second word after the word associated with
+ *                the current instruction, where first is used for the
+ *                source operand and second is used for the dest operand.
+ * @param mode:   The addressing mode of the operand, expressing the raw
+ *                mode for symbolic, absolute, and immediate modes.
+ *
+ * Returns: The number of words consumed by the operand:
+ *                1 if the word was used by the operand,
+ *                0 if the word was not used by the operand,
+ *               -1 if an error occurred and result is unchanged.
  */
-void appendConstant(char* result, uint16_t reg, addressingMode mode, char* offset) {
-    // handle immediate mode
-    if (reg == 0 && mode == AUTOINCREMENT) {
-        strcat(result, "#");
-        strcat(result, offset);
-        return;
-    }
-    // handle constant generators
+int appendOperand(char* result, uint16_t pc, uint16_t reg, uint16_t word, addressingMode mode) {
+    // todo: convert to const hashmap instead of function
+    char regStr[4]; // max string "R15\0"
+    char wordStr[7]; // max string "0xFFFF\0"
+
+    parseRegisterNum(regStr, reg);
+    uintToHex(wordStr, word);
+
     switch (mode) {
     case REGISTER:
-        if (reg == 2) {
-            strcat(result, "SR");
-        } else if (reg == 3) {
+    {
+        switch (reg) {
+        case 3:
+            // R3/CG2 constant
             strcat(result, "#0");
-        }
-        break;
-    case INDEXED:
-        if (reg == 2) {
-            strcat(result, "#");
-            strcat(result, offset);
-        } else if (reg == 3) {
-            strcat(result, "#1");
-        }
-        break;
-    case INDIRECT:
-        if (reg == 2) {
-            strcat(result, "#4");
-        } else if (reg == 3) {
-            strcat(result, "#2");
-        }
-        break;
-    case AUTOINCREMENT:
-        if (reg == 2) {
-            strcat(result, "#8");
-        } else if (reg == 3) {
-            strcat(result, "#0xFFFF");
-        }
-        break;
-    default:
-        break;
-    }
-}
-
-void appendPointer(char* result, char* regStr, uint16_t pc, uint16_t reg, uint16_t offset) {
-    if (reg == 0) { // R0/PC -> symbolic
-        uintToHex(regStr, pc + offset);
-        strcat(result, regStr);
-    } else if (reg == 2) {
-        uintToHex(regStr, offset);
-        strcat(result, "&");
-        strcat(result, regStr);
-    }
-}
-
-/**
- * Does not append a space!
- */
-void appendOperand(char* result, char* reg, addressingMode mode, char* offset) {
-    switch (mode) {
-        case REGISTER:
-            strcat(result, reg); // result: "R15"
-            break;
-        case INDEXED:
-            strcat(result, offset);
-            strcat(result, "(");
-            strcat(result, reg);
-            strcat(result, ")"); // result: "0xFFFF(R15)"
-            break;
-        case INDIRECT:
-            strcat(result, "@");
-            strcat(result, reg); // result: "@R15"
-            break;
-        case AUTOINCREMENT:
-            strcat(result, "@");
-            strcat(result, reg);
-            strcat(result, "+"); // result: "@R15+"
-            break;
+            return 0;
         default:
-            strcat(result, "ERROR"); // ADDRESSINGERROR
-            break;
+            // register mode
+            strcat(result, regStr);
+            return 0;
+        }
+    }
+    case INDEXED:
+    {
+        switch (reg) {
+        case 0:
+            // symbolic mode
+            uintToHex(wordStr, pc + word);
+            strcat(result, wordStr);
+            return 1;
+        case 2:
+            // absolute mode
+            strcat(result, "&");
+            strcat(result, wordStr);
+            return 1;
+        case 3:
+            // R3/CG2 constant
+            strcat(result, "#1");
+            return 0;
+        default:
+            // indexed mode
+            strcat(result, wordStr);
+            strcat(result, "(");
+            strcat(result, regStr);
+            strcat(result, ")");
+            return 1;
+        }
+    }
+    case INDIRECT:
+    {
+        switch (reg) {
+        case 2:
+            // R2/CG1 constant
+            strcat(result, "#4");
+            return 0;
+        case 3:
+            // R3/CG2 constant
+            strcat(result, "#2");
+            return 0;
+        default:
+            // indirect mode
+            strcat(result, "@");
+            strcat(result, regStr);
+            return 0;
+        }
+    }
+    case AUTOINCREMENT:
+    {
+        switch (reg) {
+        case 0:
+            // immediate mode
+            strcat(result, "#");
+            strcat(result, wordStr);
+            return 1;
+        case 2:
+            // R2/CG1 constant
+            strcat(result, "#8");
+            return 0;
+        case 3:
+            // R3/CG2 constant
+            strcat(result, "#-1");
+            return 0;
+        default:
+            // autoincrement mode
+            strcat(result, "@");
+            strcat(result, regStr);
+            strcat(result, "+");
+            return 0;
+        }
+    }
+    default:
+    {
+        return -1;
+    }
     }
 }
 
