@@ -15,6 +15,14 @@
 #include "masks.h"
 #include "types.h"
 
+inline void appendByteOp(char *result, bool isByteOp) {
+    if (isByteOp) {
+        strcat(result, ".B ");
+    } else {
+        strcat(result, ".W ");
+    }
+}
+
 
 /**
  * Fills result with the string assembly instruction of the instruction beginning at start_addr,
@@ -32,29 +40,33 @@
  * Returns: The number of 16-bit words the assembly instruction 'consumed'. Returns -1 if an error
  *          occurred, in which case next_addr equals start_addr + 2 and result stores "ERROR".
  */
-int nextInstruction(char* result, uint16_t start_addr, uint16_t *byte_code, uint16_t *next_addr) {
+int nextInstruction(char *result, uint16_t start_addr, uint16_t *byte_code, uint16_t *next_addr) {
     int totWords = -1;
     uint16_t op_bytes = byte_code[0];
     uint16_t srcWord = byte_code[1];
     uint16_t destWord = byte_code[2];
 
     opCode op = getOpCode(op_bytes);
+    bool isByteOp = isByteOperation(op_bytes);
     strcpy(result, op.repr);
 
     switch(op.format) {
     case DOUBLE:
     {
-        totWords = 1; // start 1 for opcode word
+        // handle emulated instructions
+        totWords = searchEmulated(result, op, start_addr, byte_code);
+        if (totWords > 0) { // emulated instruction found
+            break;
+        } else { // no emulated instruction found
+            totWords = 1;
+        }
+
         addressingMode srcMode = getSourceRegisterMode(op_bytes, DOUBLE);
         addressingMode destMode = getDestRegisterMode(op_bytes);
         uint16_t srcReg = getSourceRegister(op_bytes, DOUBLE);
         uint16_t destReg = getDestRegister(op_bytes);
 
-        if (isByteOperation(op_bytes)) {
-            strcat(result, ".B ");
-        } else {
-            strcat(result, ".W ");
-        }
+        appendByteOp(result, isByteOp);
 
         // append source operand
         switch (appendOperand(result, start_addr, srcReg, srcWord, srcMode)) {
@@ -105,11 +117,7 @@ int nextInstruction(char* result, uint16_t start_addr, uint16_t *byte_code, uint
         addressingMode srcMode = getSourceRegisterMode(op_bytes, SINGLE);
         uint16_t srcReg = getSourceRegister(op_bytes, SINGLE);
 
-        if (isByteOperation(op_bytes)) {
-            strcat(result, ".B ");
-        } else {
-            strcat(result, ".W ");
-        }
+        appendByteOp(result, isByteOp);
 
         // append source operand
         switch (appendOperand(result, start_addr, srcReg, srcWord, srcMode)) {
@@ -273,6 +281,119 @@ int appendOperand(char* result, uint16_t pc, uint16_t reg, uint16_t word, addres
         return -1;
     }
     }
+}
+
+struct emulationData {
+    uint16_t op_bytes;
+    uint16_t srcWord;
+    uint16_t destWord;
+    addressingMode srcMode;
+    addressingMode destMode;
+    uint16_t srcReg;
+    uint16_t destReg;
+    uint16_t startAddr;
+    bool isByteOp;
+};
+
+bool isADC(struct emulationData *data) {
+    return data->srcReg == 3 && data->srcMode == REGISTER;
+}
+
+bool isRLC(struct emulationData *data) {
+    return data->srcReg == data->destReg &&
+           data->srcMode == REGISTER &&
+           data->destMode == REGISTER;
+}
+
+bool isTest(struct emulationData *data) {
+    return data->srcReg == 3 && data->srcMode == REGISTER;
+}
+
+
+int searchEmulated(char *result, opCode op, uint16_t start_addr, uint16_t *byte_code) {
+    int totWords = -1;
+
+    struct emulationData data = {
+         byte_code[0], // op_bytes
+         byte_code[1], // srcWord
+         byte_code[2], // destWord
+         getSourceRegisterMode(byte_code[0], DOUBLE), // srcMode
+         getDestRegisterMode(byte_code[0]), // destMode
+         getSourceRegister(byte_code[0], DOUBLE), // srcReg
+         getDestRegister(byte_code[0]), // destReg
+         start_addr, // startAddr
+         isByteOperation(byte_code[0]), // isByteOp
+    };
+
+    switch (op.mask) {
+    case ADD_MASK:
+    {
+
+        break;
+    }
+    case ADDC_MASK:
+    {
+
+        if (isADC(&data)) {
+            // ADC(.B) dst | ADDC(.B) #0 dst | ADDC(.B) R3 dst
+            strcpy(result, "ADC");
+            appendByteOp(result, data.isByteOp);
+            data.destWord = data.srcWord;
+            totWords = 2;
+            totWords += appendOperand(result, data.startAddr, data.destReg, data.destWord, data.destMode);
+        } else if (isRLC(&data)) {
+            strcpy(result, "RLC");
+            appendByteOp(result, data.isByteOp);
+            appendOperand(result, data.startAddr, data.srcReg, data.srcWord, data.srcMode);
+            totWords = 1;
+        }
+        break;
+    }
+    case MOV_MASK:
+    {
+        break;
+    }
+    case BIC_MASK:
+    {
+        break;
+    }
+    case BIS_MASK:
+    {
+        break;
+    }
+    case DADD_MASK:
+    {
+        break;
+    }
+    case SUB_MASK:
+    {
+        break;
+    }
+    case SUBC_MASK:
+    {
+        break;
+    }
+    case XOR_MASK:
+    {
+        break;
+    }
+    case CMP_MASK:
+    {
+        if (isTest(&data)) {
+            strcpy(result, "ADC");
+            appendByteOp(result, data.isByteOp);
+            data.destWord = data.srcWord;
+            totWords = 2;
+            totWords += appendOperand(result, data.startAddr, data.destReg, data.destWord, data.destMode);
+        }
+        break;
+    }
+    default: // no valid emulated instruction
+    {
+        break;
+    }
+    }
+    return totWords;
 }
 
 // NOTE: order matters here! some masks are submasks of others!
