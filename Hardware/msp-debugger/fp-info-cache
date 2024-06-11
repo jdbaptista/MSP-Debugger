@@ -1,4 +1,4 @@
-22306628511695678
+22310064640427364
 Audio_Module
 Reverb_BTDR-1H
 Digital Reverberation Unit, http://www.belton.co.kr/inc/downfile.php?seq=17&file=pdf (footprint from http://www.uk-electronic.de/PDF/BTDR-1.pdf)
@@ -93065,7 +93065,21 @@ DIL_CONN_110-83-320-41-001101
 20
 20
 project
+NHD-0440AZ-FL-YBW
+
+
+0
+18
+18
+project
 Potentiometer_CTS_PTN10-E20HB20
+
+
+0
+3
+3
+project
+TRIM_3362P-1-103LF
 
 
 0
