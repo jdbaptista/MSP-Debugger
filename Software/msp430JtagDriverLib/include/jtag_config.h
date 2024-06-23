@@ -30,16 +30,16 @@
 #endif
 
 #ifdef __MSP430G2553__
-#define JTAGDIR     (P2DIR)     // port direction
-#define JTAGIN      (P2IN)      // port input
-#define JTAGOUT     (P2OUT)     // port output
-#define JTAGREN     (P2REN)     // port resistor enable
-#define RST         (0x10)      // Target MSP430 reset (4) (16)
-#define TMS         (0x04)      // JTAG FSM control    (2) (7)
-#define TCK         (0x02)      // JTAG clock input    (1) (6)
-#define TDI         (0x01)      // JTAG data input and TCLK input (0) (14)
-#define TDO         (0x08)      // JTAG data output (3) (15)
-#define TEST        (0x20)      // JTAG enable pins (5) (17)
+#define JTAGDIR     (P1DIR)     // port direction
+#define JTAGIN      (P1IN)      // port input
+#define JTAGOUT     (P1OUT)     // port output
+#define JTAGREN     (P1REN)     // port resistor enable
+#define RST         (BIT0)      // Target reset: target pin 16
+#define TEST        (BIT3)      // JTAG enable pins: target pin 17
+#define TDO         (BIT4)      // JTAG data output: target pin 15
+#define TMS         (BIT5)      // JTAG FSM control: target pin 7
+#define TCK         (BIT6)      // JTAG clock input: target pin 6
+#define TDI         (BIT7)      // JTAG data input & TCLK input:14
 #endif
 
 
