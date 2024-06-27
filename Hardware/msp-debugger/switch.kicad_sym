@@ -1,0 +1,236 @@
+(kicad_symbol_lib (version 20220914) (generator kicad_symbol_editor)
+  (symbol "OS102011MS2QN1" (pin_names (offset 0.254)) (in_bom yes) (on_board yes)
+    (property "Reference" "SW" (at 13.97 8.255 0)
+      (effects (font (size 1.524 1.524)))
+    )
+    (property "Value" "OS102011MS2QN1" (at 20.32 5.08 0)
+      (effects (font (size 1.524 1.524)))
+    )
+    (property "Footprint" "SPDT_OS102011_CNK" (at 0 0 0)
+      (effects (font (size 1.27 1.27) italic) hide)
+    )
+    (property "Datasheet" "OS102011MS2QN1" (at 0 0 0)
+      (effects (font (size 1.27 1.27) italic) hide)
+    )
+    (property "ki_locked" "" (at 0 0 0)
+      (effects (font (size 1.27 1.27)))
+    )
+    (property "ki_keywords" "OS102011MS2QN1" (at 0 0 0)
+      (effects (font (size 1.27 1.27)) hide)
+    )
+    (property "ki_fp_filters" "SPDT_OS102011_CNK" (at 0 0 0)
+      (effects (font (size 1.27 1.27)) hide)
+    )
+    (symbol "OS102011MS2QN1_0_1"
+      (polyline
+        (pts
+          (xy 7.62 -12.7)
+          (xy 17.78 -12.7)
+        )
+        (stroke (width 0.127) (type default))
+        (fill (type none))
+      )
+      (polyline
+        (pts
+          (xy 7.62 -10.16)
+          (xy 11.43 -10.16)
+        )
+        (stroke (width 0.127) (type default))
+        (fill (type none))
+      )
+      (polyline
+        (pts
+          (xy 7.62 -5.08)
+          (xy 11.43 -5.08)
+        )
+        (stroke (width 0.127) (type default))
+        (fill (type none))
+      )
+      (polyline
+        (pts
+          (xy 7.62 0)
+          (xy 11.43 0)
+        )
+        (stroke (width 0.127) (type default))
+        (fill (type none))
+      )
+      (polyline
+        (pts
+          (xy 7.62 2.54)
+          (xy 7.62 -12.7)
+        )
+        (stroke (width 0.127) (type default))
+        (fill (type none))
+      )
+      (polyline
+        (pts
+          (xy 10.16 -9.525)
+          (xy 10.16 -10.795)
+        )
+        (stroke (width 0.127) (type default))
+        (fill (type none))
+      )
+      (polyline
+        (pts
+          (xy 10.16 -4.445)
+          (xy 10.16 -5.715)
+        )
+        (stroke (width 0.127) (type default))
+        (fill (type none))
+      )
+      (polyline
+        (pts
+          (xy 10.16 0.635)
+          (xy 10.16 -0.635)
+        )
+        (stroke (width 0.127) (type default))
+        (fill (type none))
+      )
+      (polyline
+        (pts
+          (xy 11.43 -12.065)
+          (xy 13.335 -12.065)
+        )
+        (stroke (width 0.127) (type default))
+        (fill (type none))
+      )
+      (polyline
+        (pts
+          (xy 11.43 -10.16)
+          (xy 10.16 -10.795)
+        )
+        (stroke (width 0.127) (type default))
+        (fill (type none))
+      )
+      (polyline
+        (pts
+          (xy 11.43 -10.16)
+          (xy 10.16 -9.525)
+        )
+        (stroke (width 0.127) (type default))
+        (fill (type none))
+      )
+      (polyline
+        (pts
+          (xy 11.43 -5.08)
+          (xy 10.16 -5.715)
+        )
+        (stroke (width 0.127) (type default))
+        (fill (type none))
+      )
+      (polyline
+        (pts
+          (xy 11.43 -5.08)
+          (xy 10.16 -4.445)
+        )
+        (stroke (width 0.127) (type default))
+        (fill (type none))
+      )
+      (polyline
+        (pts
+          (xy 11.43 -3.175)
+          (xy 11.43 -12.065)
+        )
+        (stroke (width 0.127) (type default))
+        (fill (type none))
+      )
+      (polyline
+        (pts
+          (xy 11.43 0)
+          (xy 10.16 -0.635)
+        )
+        (stroke (width 0.127) (type default))
+        (fill (type none))
+      )
+      (polyline
+        (pts
+          (xy 11.43 0)
+          (xy 10.16 0.635)
+        )
+        (stroke (width 0.127) (type default))
+        (fill (type none))
+      )
+      (polyline
+        (pts
+          (xy 13.335 -12.065)
+          (xy 13.335 -3.175)
+        )
+        (stroke (width 0.127) (type default))
+        (fill (type none))
+      )
+      (polyline
+        (pts
+          (xy 13.335 -3.175)
+          (xy 11.43 -3.175)
+        )
+        (stroke (width 0.127) (type default))
+        (fill (type none))
+      )
+      (polyline
+        (pts
+          (xy 17.78 -12.7)
+          (xy 17.78 2.54)
+        )
+        (stroke (width 0.127) (type default))
+        (fill (type none))
+      )
+      (polyline
+        (pts
+          (xy 17.78 2.54)
+          (xy 7.62 2.54)
+        )
+        (stroke (width 0.127) (type default))
+        (fill (type none))
+      )
+      (polyline
+        (pts
+          (xy 10.16 -9.525)
+          (xy 10.16 -10.795)
+          (xy 11.43 -10.16)
+        )
+        (stroke (width 0) (type default))
+        (fill (type outline))
+      )
+      (polyline
+        (pts
+          (xy 10.16 -4.445)
+          (xy 10.16 -5.715)
+          (xy 11.43 -5.08)
+        )
+        (stroke (width 0) (type default))
+        (fill (type outline))
+      )
+      (polyline
+        (pts
+          (xy 10.16 0.635)
+          (xy 10.16 -0.635)
+          (xy 11.43 0)
+        )
+        (stroke (width 0) (type default))
+        (fill (type outline))
+      )
+      (polyline
+        (pts
+          (xy 11.43 -3.175)
+          (xy 11.43 -12.065)
+          (xy 13.335 -12.065)
+          (xy 13.335 -3.175)
+        )
+        (stroke (width 0) (type default))
+        (fill (type outline))
+      )
+      (pin unspecified line (at 0 0 0) (length 7.62)
+        (name "1" (effects (font (size 1.27 1.27))))
+        (number "1" (effects (font (size 1.27 1.27))))
+      )
+      (pin unspecified line (at 0 -5.08 0) (length 7.62)
+        (name "2" (effects (font (size 1.27 1.27))))
+        (number "2" (effects (font (size 1.27 1.27))))
+      )
+      (pin unspecified line (at 0 -10.16 0) (length 7.62)
+        (name "3" (effects (font (size 1.27 1.27))))
+        (number "3" (effects (font (size 1.27 1.27))))
+      )
+    )
+  )
+)
