@@ -2860,9 +2860,9 @@
       (stroke (width 0.1) (type solid)) (layer "F.Fab") (tstamp 4fc427f3-ea59-4ed3-9fcf-56990db5f4d5))
     (fp_line (start 2.25 1.6) (end -2.25 1.6)
       (stroke (width 0.1) (type solid)) (layer "F.Fab") (tstamp 097e7a69-581d-4edf-ab57-6f2370a1fa31))
-    (pad "1" smd roundrect (at -2.1375 0) (size 1.125 3.4) (layers "F.Cu" "F.Paste" "F.Mask") (roundrect_rratio 0.222222)
+    (pad "1" smd roundrect (at -2.1375 0) (size 1.125 3.4) (layers "F.Cu" "F.Paste" "F.Mask") (roundrect_rratio 0.2222222222)
       (net 4 "/PWR_IN") (pintype "passive") (tstamp 5d00c675-b0c2-41d6-9219-67623fa90e9d))
-    (pad "2" smd roundrect (at 2.1375 0) (size 1.125 3.4) (layers "F.Cu" "F.Paste" "F.Mask") (roundrect_rratio 0.222222)
+    (pad "2" smd roundrect (at 2.1375 0) (size 1.125 3.4) (layers "F.Cu" "F.Paste" "F.Mask") (roundrect_rratio 0.2222222222)
       (net 50 "+5V") (pintype "passive") (tstamp c4b7fe53-0dc0-4abc-893c-cc2557e41eab))
     (model "${KICAD6_3DMODEL_DIR}/Fuse.3dshapes/Fuse_1812_4532Metric.wrl"
       (offset (xyz 0 0 0))
