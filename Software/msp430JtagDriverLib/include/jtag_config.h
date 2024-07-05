@@ -34,12 +34,12 @@
 #define JTAGIN      (P1IN)      // port input
 #define JTAGOUT     (P1OUT)     // port output
 #define JTAGREN     (P1REN)     // port resistor enable
-#define RST         (BIT0)      // Target reset: target pin 16
-#define TEST        (BIT3)      // JTAG enable pins: target pin 17
+#define TEST        (BIT0)      // JTAG enable pins: target pin 17
+#define RST         (BIT3)      // Target reset: target pin 16
 #define TDO         (BIT4)      // JTAG data output: target pin 15
-#define TMS         (BIT5)      // JTAG FSM control: target pin 7
-#define TCK         (BIT6)      // JTAG clock input: target pin 6
-#define TDI         (BIT7)      // JTAG data input & TCLK input:14
+#define TDI         (BIT5)      // JTAG data input & TCLK input 14
+#define TMS         (BIT6)      // JTAG FSM control: target pin 7
+#define TCK         (BIT7)      // JTAG clock input: target pin 6
 #endif
 
 
