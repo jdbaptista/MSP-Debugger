@@ -30,35 +30,96 @@ static bool down_asm = false;
 static bool show_asm = true;
 static bool jump_asm = false;
 
+static bool wait_up = false;
+static bool wait_down = false;
+static bool wait_show = false;
+static bool wait_jump = false;
+
+// These are necessary for the timer to
+// know when to begin waiting. If latch
+// is true while wait is true, then the
+// switch was bouncing. Otherwise, if
+// wait is true and latch is false, then
+// the button was successfully pressed and
+// the signal is sent to the main routine.
+static bool latch_up = false;
+static bool latch_down = false;
+static bool latch_show = false;
+static bool latch_jump = false;
+
 #pragma vector=BTN_VECT
 interrupt void button_irq(void) {
     if (BTN_IFG & HEX_BTN) {
-        show_asm = (show_asm) ? false : true;
-        update = true;
+        latch_show = true;
         BTN_IFG &= ~HEX_BTN;
         return;
     }
     if (BTN_IFG & JMP_BTN) {
-        jump_asm = true;
-        update = true;
-        BTN_IFG &= ~JMP_BTN; // dont care about up and down
+        latch_jump = true;
+        BTN_IFG &= ~JMP_BTN;
         return;
     }
-    if (BTN_IFG & DOWN_BTN) { // actually goes up in memory, down in code
-        down_asm = true;
-        update = true;
+    if (BTN_IFG & DOWN_BTN) {
+        latch_down = true;
         BTN_IFG &= ~DOWN_BTN;
         return;
     }
-    if (BTN_IFG & UP_BTN) { // actually goes down in memory, up in code
-        up_asm = true;
-        update = true;
+    if (BTN_IFG & UP_BTN) {
+        latch_up = true;
         BTN_IFG &= ~UP_BTN;
         return;
     }
     // default case
     BTN_IFG &= ~BUTTONS;
     return;
+}
+
+#pragma vector=TIMER0_A1_VECTOR
+interrupt void timer_debounce_irq(void) {
+    if (!(TA0IV & TA0IV_TAIFG)) {
+        return; // automatically removes highest ifg
+    }
+    if (latch_up && wait_up) {
+        latch_up = false;
+    } else if (wait_up) {
+        up_asm = true;
+        update = true;
+        wait_up = false;
+    } else if (latch_up) {
+        wait_up = true;
+        latch_up = false;
+    }
+    if (latch_down && wait_down) {
+        latch_down = false;
+    } else if (wait_down) {
+        down_asm = true;
+        update = true;
+        wait_down = false;
+    } else if (latch_down) {
+        wait_down = true;
+        latch_down = false;
+    }
+    if (latch_jump && wait_jump) {
+        latch_jump = false;
+    } else if (wait_jump) {
+        jump_asm = true;
+        update = true;
+        wait_jump = false;
+    } else if (latch_jump) {
+        wait_jump = true;
+        latch_jump = false;
+    }
+    if (latch_show && wait_show) {
+        latch_show = false;
+    } else if (wait_show) {
+        show_asm = (show_asm) ? false : true;
+        update = true;
+        wait_show = false;
+    } else if (latch_show) {
+        wait_show = true;
+        latch_show = false;
+    }
+    TA0IV = 0;
 }
 
 inline void initButtons() {
@@ -71,6 +132,19 @@ inline void initButtons() {
     BTN_IES &= ~BUTTONS;
     BTN_IFG &= ~BUTTONS;
     BTN_IE |= BUTTONS;
+
+    // setup timer A0 for debouncing
+    TA0CTL &= ~TASSEL0; // select ACLK source
+    TA0CTL |= TASSEL1;
+    TA0CTL |= ID0; // select input divider 2
+    TA0CTL &= ~ID1;
+    TA0CTL &= ~MC0; // select continuous mode
+    TA0CTL |= MC1;
+    TA0CCTL0 &= ~(CM0 + CM1); // disable CC interrupts
+    TA0CCTL1 &= ~(CM0 + CM1);
+    TA0CCTL2 &= ~(CM0 + CM1);
+    TA0CTL &= ~TAIFG;
+    TA0CTL |= TAIE; // enable timer overflow interrupt
 }
 
 inline void initBackchannel() {
@@ -119,7 +193,14 @@ int main(void)
         wait_print("\033[H"); // home cursor command
 
         if (jump_asm) {
-            // todo: implement logic
+            curr_addr = getJumpLocation(bytes[0], curr_addr);
+            bytes[0] = readMem(curr_addr);
+            bytes[1] = readMem(curr_addr + 2);
+            bytes[2] = readMem(curr_addr + 4);
+            numBytes = nextInstruction(assembly, curr_addr, bytes, &next_addr);
+            if (numBytes < 0) {
+                numBytes = 0;
+            }
             jump_asm = false;
         }
         if (up_asm) {
