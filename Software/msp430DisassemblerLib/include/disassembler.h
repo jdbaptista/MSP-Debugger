@@ -12,10 +12,25 @@
 #include "types.h"
 #include "masks.h"
 
-uint16_t nextInstrAddr(uint16_t start_addr, uint16_t op_bytes);
-int nextInstruction(char* result, uint16_t start_addr, uint16_t *byte_code, uint16_t *next_addr);
-int appendOperand(char* result, uint16_t pc, uint16_t reg, uint16_t word, addressingMode mode);
-int searchEmulated(char *result, opCode op, uint16_t start_addr, uint16_t *byte_code);
+struct Instruction {
+    /* The address where this instruction is located in target flash */
+    uint16_t address;
+    /* The word that encode the type of operation and registers */
+    uint16_t operator;
+    /* The word directly after the operator in memory,
+     * potentially encoding the source operand offset */
+    uint16_t source;
+    /* The word after the source operator in memory,
+     * potentially encoding the destination offset */
+    uint16_t destination;
+};
+
+typedef struct Instruction Instruction;
+
+int nextAddress(uint16_t *next_addr, Instruction *instr);
+bool getInstruction(char *buffer, Instruction *instr);
+bool appendOperand(char *result, uint16_t pc, uint16_t reg, uint16_t word, addressingMode mode);
+int searchEmulated(char *result, opCode *op, uint16_t start_addr, uint16_t *byte_code);
 opCode getOpCode(uint16_t byteCode);
 addressingMode getDestRegisterMode(uint16_t byteCode);
 addressingMode getSourceRegisterMode(uint16_t byteCode, formatType type);

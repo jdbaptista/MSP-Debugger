@@ -25,7 +25,7 @@ inline void appendByteOp(char *result, bool isByteOp) {
 
 /**
  * Returns 1 if the addressing mode consumes a byte,
- * 0 otherwise.
+ * 0 otherwise. Used in nextAddress function.
  *
  * @param source: true if this is the source operand, false if this
  *                is the destination operand.
@@ -57,34 +57,41 @@ uint16_t modeConsumesByte(bool source, uint16_t reg, addressingMode mode) {
 }
 
 /**
- * Returns the address of the next instruction.
+ * Finds the address of the next instruction.
  *
  * @param start_addr: The location in memory of the current instruction.
- * @param byte_code: An array of 3 16-bit words corresponding to the memory
- *                   beginning at start_addr. Remains unchanged.
+ * @param byte_code: The memory contents beginning at start_addr. This function does
+ *                   not care about the source or destination, only the operator.
+ * @param next_addr: A pointer to where this function should return the memory location
+ *                   of the next instruction to decode, necessary because of variable
+ *                   length instructions. If not required, this should be set to NULL.
  *
- * Returns: The address of the next instruction.
+ * Returns: The number of 16-bit words used to encode the assembly instruction. Returns
+ *          -1 if an error occurred, in which case next_addr equals start_addr + 2.
  */
-uint16_t nextInstrAddr(uint16_t start_addr, uint16_t op_bytes) {
-    opCode op = getOpCode(op_bytes);
-    uint16_t bytes_consumed = 1; // consume opcode byte
+int nextAddress(uint16_t *next_addr, Instruction *instr) {
+    uint16_t bytes_consumed, srcReg, destReg;
+    addressingMode srcMode, destMode;
+    opCode op;
 
+    op = getOpCode(instr->operator);
+    bytes_consumed = 1; // consume opcode byte
     switch (op.format) {
     case DOUBLE:
     {
-        addressingMode srcMode = getSourceRegisterMode(op_bytes, DOUBLE);
-        addressingMode destMode = getDestRegisterMode(op_bytes);
-        uint16_t srcReg = getSourceRegister(op_bytes, DOUBLE);
-        uint16_t destReg = getDestRegister(op_bytes);
+        srcMode = getSourceRegisterMode(instr->operator, DOUBLE);
+        destMode = getDestRegisterMode(instr->operator);
+        srcReg = getSourceRegister(instr->operator, DOUBLE);
+        destReg = getDestRegister(instr->operator);
         bytes_consumed += modeConsumesByte(true, srcReg, srcMode);
         bytes_consumed += modeConsumesByte(false, destReg, destMode);
         break;
     }
     case SINGLE:
     {
-        addressingMode srcMode = getSourceRegisterMode(op_bytes, SINGLE);
-        uint16_t srcReg = getSourceRegister(op_bytes, SINGLE);
-        bytes_consumed + modeConsumesByte(true, srcReg, srcMode);
+        srcMode = getSourceRegisterMode(instr->operator, SINGLE);
+        srcReg = getSourceRegister(instr->operator, SINGLE);
+        bytes_consumed += modeConsumesByte(true, srcReg, srcMode);
         break;
     }
     case JUMP:
@@ -95,154 +102,87 @@ uint16_t nextInstrAddr(uint16_t start_addr, uint16_t op_bytes) {
     default:
     {
         // an error occurred, return error address
-        return 0;
+        if (next_addr != NULL) {
+            *next_addr = instr->address + 2;
+        }
+        return -1;
     }
     }
-    return start_addr + 2 * bytes_consumed;
+    if (next_addr != NULL) {
+        *next_addr = instr->address + (bytes_consumed << 1);
+    }
+    return bytes_consumed;
 }
 
 
 /**
- * Fills result with the string assembly instruction of the instruction beginning at start_addr,
- * which should correspond to the first word presented in byte_code. The function returns the
- * next assembly instruction address in next_addr because the byte length of instructions varies
- * depending on register addressing modes used.
+ * Fills buffer with the string assembly
+ * instruction corresponding to instr.
  *
- * @param result: A string buffer of minimum length 31 that will store the assembly instruction.
- * @param start_addr: The location in memory of the instruction to decode.
- * @param byte_code: An array of 3 16-bit words corresponding to the memory beginning at start_addr.
- *                   Remains unchanged over this function's execution.
- * @param next_addr: A pointer to where this function should return the memory location of the
- *                   next instruction to decode, necessary because of variable length instructions.
+ * @param buffer: A string buffer of minimum length 31 that
+ *                will store the assembly instruction.
+ * @param instr: The instruction information.
  *
- * Returns: The number of 16-bit words the assembly instruction 'consumed'. Returns -1 if an error
- *          occurred, in which case next_addr equals start_addr + 2 and result stores "ERROR".
+ * Returns: True if successful, false if an error occurred,
+ *          in which case the buffer is filled with "ERROR".
  */
-int nextInstruction(char *result, uint16_t start_addr, uint16_t *byte_code, uint16_t *next_addr) {
-    int totWords = -1;
-    uint16_t op_bytes = byte_code[0];
-    uint16_t srcWord = byte_code[1];
-    uint16_t destWord = byte_code[2];
+bool getInstruction(char *buffer, Instruction *instr) {
+    addressingMode srcMode, destMode;
+    uint16_t srcReg, destReg;
+    char pcNewStr[7];
+    bool isByteOp;
+    opCode op;
 
-    opCode op = getOpCode(op_bytes);
-    bool isByteOp = isByteOperation(op_bytes);
-    strcpy(result, op.repr);
-
+    op = getOpCode(instr->operator);
+    isByteOp = isByteOperation;
+    strcpy(buffer, op.repr);
     switch(op.format) {
     case DOUBLE:
     {
-        // handle emulated instructions
-//        totWords = searchEmulated(result, op, start_addr, byte_code);
-//        if (totWords > 0) { // emulated instruction found
-//            break;
-//        } else { // no emulated instruction found
-//            totWords = 1;
-//        }
-        totWords = 1;
-
-        addressingMode srcMode = getSourceRegisterMode(op_bytes, DOUBLE);
-        addressingMode destMode = getDestRegisterMode(op_bytes);
-        uint16_t srcReg = getSourceRegister(op_bytes, DOUBLE);
-        uint16_t destReg = getDestRegister(op_bytes);
-
-        appendByteOp(result, isByteOp);
-
+        appendByteOp(buffer, isByteOp);
         // append source operand
-        switch (appendOperand(result, start_addr, srcReg, srcWord, srcMode)) {
-        case 1: // srcWord was consumed
-        {
-            totWords++;
-            break;
+        srcMode = getSourceRegisterMode(instr->operator, DOUBLE);
+        srcReg = getSourceRegister(instr->operator, DOUBLE);
+        if (!appendOperand(buffer, instr->address, srcReg, instr->source, srcMode)) {
+            strcpy(buffer, "ERROR");
+            return false;
         }
-        case 0: // srcWord was not consumed
-        {
-            destWord = srcWord;
-            break;
-        }
-        default: // an error occurred
-        {
-            strcpy(result, "ERROR");
-            *next_addr = start_addr + 2;
-            return -1;
-        }
-        }
-        strcat(result, " ");
-
-        // append dest operand
-        switch (appendOperand(result, start_addr, destReg, destWord, destMode)) {
-        case 1: // destWord was consumed
-        {
-            totWords++;
-            break;
-        }
-        case 0: // destWord was not consumed
-        {
-            break;
-        }
-        default: // an error occurred
-        {
-            strcpy(result, "ERROR");
-            *next_addr = start_addr + 2;
-            return -1;
-        }
+        strcat(buffer, " ");
+        // append destination operand
+        destMode = getDestRegisterMode(instr->operator);
+        destReg = getDestRegister(instr->operator);
+        if (!appendOperand(buffer, instr->address, destReg, instr->destination, destMode)) {
+            strcpy(buffer, "ERROR");
+            return false;
         }
         break;
     }
     case SINGLE:
     {
-        totWords = 1;
-        // the documentation calls this the destination,
-        // however it aligns with src more accurately.
-        addressingMode srcMode = getSourceRegisterMode(op_bytes, SINGLE);
-        uint16_t srcReg = getSourceRegister(op_bytes, SINGLE);
-
-        appendByteOp(result, isByteOp);
-
+        appendByteOp(buffer, isByteOp);
         // append source operand
-        switch (appendOperand(result, start_addr, srcReg, srcWord, srcMode)) {
-        case 1: // srcWord was consumed
-        {
-            totWords++;
-            break;
-        }
-        case 0: // srcWord was not consumed
-        {
-            destWord = srcWord;
-            break;
-        }
-        default: // an error occurred
-        {
-            strcpy(result, "ERROR");
-            *next_addr = start_addr + 2;
-            return -1;
-        }
+        srcMode = getSourceRegisterMode(instr->operator, SINGLE);
+        srcReg = getSourceRegister(instr->operator, SINGLE);
+        if (!appendOperand(buffer, instr->address, srcReg, instr->source, srcMode)) {
+            strcpy(buffer, "ERROR");
+            return false;
         }
         break;
     }
     case JUMP:
     {
-        totWords = 1;
-        uint16_t pcNew = getJumpLocation(op_bytes, start_addr);
-        char pcNewStr[7]; // max #0xFFFF\0"
-        uintToHex(pcNewStr, pcNew); // use srcOffsetStr to save memory
-        strcat(result, " ");
-        strcat(result, pcNewStr);
+        uintToHex(pcNewStr, getJumpLocation(instr->operator, instr->address));
+        strcat(buffer, " ");
+        strcat(buffer, pcNewStr);
         break;
     }
     default:
     {
-        break;
+        strcpy(buffer, "ERROR");
+        return false;
     }
     }
-
-    if (totWords == -1) { // an error has occurred
-        strcpy(result, "ERROR");
-        *next_addr = start_addr + 2;
-        return -1;
-    } else {
-        *next_addr = start_addr + (totWords << 1);
-        return totWords;
-    }
+    return true;
 }
 
 /**
@@ -260,12 +200,9 @@ int nextInstruction(char *result, uint16_t start_addr, uint16_t *byte_code, uint
  * @param mode:   The addressing mode of the operand, expressing the raw
  *                mode for symbolic, absolute, and immediate modes.
  *
- * Returns: The number of words consumed by the operand:
- *                1 if the word was used by the operand,
- *                0 if the word was not used by the operand,
- *               -1 if an error occurred and result is unchanged.
+ * Returns: True if successful, false if an error occurred.
  */
-int appendOperand(char* result, uint16_t pc, uint16_t reg, uint16_t word, addressingMode mode) {
+bool appendOperand(char* result, uint16_t pc, uint16_t reg, uint16_t word, addressingMode mode) {
     // todo: convert to const hashmap instead of function
     char regStr[4]; // max string "R15\0"
     char wordStr[7]; // max string "0xFFFF\0"
@@ -280,11 +217,11 @@ int appendOperand(char* result, uint16_t pc, uint16_t reg, uint16_t word, addres
         case 3:
             // R3/CG2 constant
             strcat(result, "#0");
-            return 0;
+            return true;
         default:
             // register mode
             strcat(result, regStr);
-            return 0;
+            return true;
         }
     }
     case INDEXED:
@@ -294,23 +231,23 @@ int appendOperand(char* result, uint16_t pc, uint16_t reg, uint16_t word, addres
             // symbolic mode
             uintToHex(wordStr, pc + word);
             strcat(result, wordStr);
-            return 1;
+            return true;
         case 2:
             // absolute mode
             strcat(result, "&");
             strcat(result, wordStr);
-            return 1;
+            return true;
         case 3:
             // R3/CG2 constant
             strcat(result, "#1");
-            return 0;
+            return true;
         default:
             // indexed mode
             strcat(result, wordStr);
             strcat(result, "(");
             strcat(result, regStr);
             strcat(result, ")");
-            return 1;
+            return true;
         }
     }
     case INDIRECT:
@@ -319,16 +256,16 @@ int appendOperand(char* result, uint16_t pc, uint16_t reg, uint16_t word, addres
         case 2:
             // R2/CG1 constant
             strcat(result, "#4");
-            return 0;
+            return true;
         case 3:
             // R3/CG2 constant
             strcat(result, "#2");
-            return 0;
+            return true;
         default:
             // indirect mode
             strcat(result, "@");
             strcat(result, regStr);
-            return 0;
+            return true;
         }
     }
     case AUTOINCREMENT:
@@ -338,28 +275,29 @@ int appendOperand(char* result, uint16_t pc, uint16_t reg, uint16_t word, addres
             // immediate mode
             strcat(result, "#");
             strcat(result, wordStr);
-            return 1;
+            return true;
         case 2:
             // R2/CG1 constant
             strcat(result, "#8");
-            return 0;
+            return true;
         case 3:
             // R3/CG2 constant
             strcat(result, "#-1");
-            return 0;
+            return true;
         default:
             // autoincrement mode
             strcat(result, "@");
             strcat(result, regStr);
             strcat(result, "+");
-            return 0;
+            return true;
         }
     }
     default:
     {
-        return -1;
+        break;
     }
     }
+    return false;
 }
 
 struct emulationData {
@@ -389,7 +327,7 @@ bool isTest(struct emulationData *data) {
 }
 
 
-int searchEmulated(char *result, opCode op, uint16_t start_addr, uint16_t *byte_code) {
+int searchEmulated(char *result, opCode *op, uint16_t start_addr, uint16_t *byte_code) {
     int totWords = -1;
 
     struct emulationData data = {
@@ -404,7 +342,7 @@ int searchEmulated(char *result, opCode op, uint16_t start_addr, uint16_t *byte_
          isByteOperation(byte_code[0]), // isByteOp
     };
 
-    switch (op.mask) {
+    switch (op->mask) {
     case ADD_MASK:
     {
 

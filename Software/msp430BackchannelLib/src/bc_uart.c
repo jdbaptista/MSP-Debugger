@@ -207,6 +207,7 @@ interrupt void bc_uart_irq(void) {
  * on this function if it is currently unable to send new data.
  * If the buffer is too small for the input, transmits only a
  * portion of the input.
+ * todo: software interrupt silly ^
  */
 bool print(char *input) {
     unsigned char reset_high = BCCTL1 & UCSWRST;
@@ -231,7 +232,7 @@ bool print(char *input) {
 
 /**
  * Prints the input as 0xABCD,
- * where ABCD is the hexidecimal
+ * where ABCD is the hexadecimal
  * representation of the input.
  */
 bool print_hex(uint16_t input) {

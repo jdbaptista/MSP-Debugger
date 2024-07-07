@@ -154,9 +154,100 @@ inline void initBackchannel() {
     usci_start();
     enable_uart_tx_interrupt();
     clear_uart_tx_interrupt_flag();
-    __bis_SR_register(GIE);
-    wait_print("\033[2J"); // clear screen command
-    wait_print("\033[H"); // home cursor command
+}
+
+void handleJump(uint16_t *curr_addr) {
+    uint16_t jump_addr, operator;
+    opCode opcode;
+
+    operator = readMem(*curr_addr);
+    opcode = getOpCode(operator);
+    if (opcode.format == JUMP) {
+        jump_addr = getJumpLocation(operator, *curr_addr);
+        if (jump_addr >= 0xC000 && jump_addr < 0xFFFF) {
+            *curr_addr = jump_addr;
+        }
+    }
+}
+
+void handleUp(uint16_t *curr_addr) {
+    Instruction instr;
+    uint16_t prev_addr;
+
+    instr.address = 0xC000;
+    while (instr.address < *curr_addr) {
+        instr.operator = readMem(instr.address);
+        instr.source = readMem(instr.address + 2);
+        instr.destination = readMem(instr.address + 4);
+        prev_addr = instr.address;
+        nextAddress(&(instr.address), &instr);
+    }
+    *curr_addr = prev_addr;
+}
+
+void handleDown(uint16_t *curr_addr) {
+    Instruction instr;
+
+    instr.address = *curr_addr;
+    instr.operator = readMem(instr.address);
+    instr.source = readMem(instr.address + 2);
+    instr.destination = readMem(instr.address + 4);
+    nextAddress(curr_addr, &instr);
+}
+
+void displayAsm(uint16_t addr) {
+    Instruction instr;
+    char buffer[31];
+    uint16_t i;
+
+    instr.address = addr;
+    for (i = 4; i > 0; i--) {
+        instr.operator = readMem(instr.address);
+        instr.source = readMem(instr.address + 2);
+        instr.destination = readMem(instr.address + 4);
+        wait_print_hex(instr.address);
+        wait_print(": ");
+        getInstruction(buffer, &instr);
+        wait_print(buffer);
+        if (i == 4) {
+            wait_print(" <");
+        }
+        wait_print("\033[E"); // newline command
+        nextAddress(&(instr.address), &instr);
+    }
+}
+
+void displayBin(uint16_t addr) {
+    int encodingLength;
+    Instruction instr;
+    uint16_t i;
+
+    instr.address = addr;
+    for (i = 4; i > 0; i--) {
+        instr.operator = readMem(instr.address);
+        instr.source = readMem(instr.address + 2);
+        instr.destination = readMem(instr.address + 4);
+        wait_print_hex(instr.address);
+        wait_print(": ");
+        encodingLength = nextAddress(NULL, &instr);
+        if (encodingLength == -1) {
+            encodingLength = 1; // next address internally moves 1 word upon error
+        }
+        if (encodingLength >= 1) {
+            wait_print_hex(instr.operator);
+        }
+        if (encodingLength >= 2) {
+            wait_print_hex(instr.source);
+        }
+        if (encodingLength >= 3) {
+            wait_print_hex(instr.destination);
+        }
+        if (i == 4) {
+            wait_print(" <");
+        }
+        wait_print("\033[E"); // newline command
+        nextAddress(&(instr.address), &instr);
+    }
 }
 
 /**
@@ -164,101 +255,45 @@ inline void initBackchannel() {
  */
 int main(void)
 {
-    WDTCTL = WDTPW | WDTHOLD; // stop watchdog timer
-    uint16_t curr_addr = 0xC000;
-    uint16_t next_addr = curr_addr;
+    uint16_t curr_addr;
 
-    uint16_t bytes[3];
-    int numBytes = 0;
-    char assembly[31];
-    char assembly2[31];
-    char assembly3[31];
-    char assembly4[31];
+    WDTCTL = WDTPW | WDTHOLD; // stop watchdog timer
+
     initButtons();
     initBackchannel();
+
+    __bis_SR_register(GIE);
+    wait_print("\033[2J"); // clear screen command
+    wait_print("\033[H"); // home cursor command
+
     initFSM();
     getDevice();
     haltCPU();
 
-    bytes[0] = readMem(curr_addr);
-    bytes[1] = readMem(curr_addr + 2);
-    bytes[2] = readMem(curr_addr + 4);
-    numBytes = nextInstruction(assembly, curr_addr, bytes, &next_addr);
-
+    curr_addr = 0xC000; // TODO: replace with address from reset vector
     update = true;
     while (true) {
-        uart_wait();
         while (!update) {} // TODO: implement sleep mode
-
-        wait_print("\033[2J"); // clear screen command
-        wait_print("\033[H"); // home cursor command
-
         if (jump_asm) {
-            curr_addr = getJumpLocation(bytes[0], curr_addr);
-            bytes[0] = readMem(curr_addr);
-            bytes[1] = readMem(curr_addr + 2);
-            bytes[2] = readMem(curr_addr + 4);
-            numBytes = nextInstruction(assembly, curr_addr, bytes, &next_addr);
-            if (numBytes < 0) {
-                numBytes = 0;
-            }
+            handleJump(&curr_addr);
             jump_asm = false;
         }
         if (up_asm) {
-            // iterate from beginning to find previous instruction
-            uint16_t prev_addr = 0xC000;
-            uint16_t temp_addr = 0;
-            while (prev_addr < curr_addr) {
-                temp_addr = nextInstrAddr(prev_addr, readMem(prev_addr));
-                if (temp_addr == 0) {
-                    // an error occurred, don't execute operation
-                    prev_addr = 0;
-                    break;
-                }
-                if (temp_addr == curr_addr) {
-                    // prev_addr is the correct previous instruction
-                    curr_addr = prev_addr;
-                    break;
-                }
-                prev_addr = temp_addr;
-            }
-            if (prev_addr != 0) {
-                bytes[0] = readMem(curr_addr);
-                bytes[1] = readMem(curr_addr + 2);
-                bytes[2] = readMem(curr_addr + 4);
-                numBytes = nextInstruction(assembly, curr_addr, bytes, &next_addr);
-            }
-
+            handleUp(&curr_addr);
             up_asm = false;
         }
         if (down_asm) {
-            uart_wait(); // for debugging
-            curr_addr = next_addr;
-            bytes[0] = readMem(curr_addr);
-            bytes[1] = readMem(curr_addr + 2);
-            bytes[2] = readMem(curr_addr + 4);
-            numBytes = nextInstruction(assembly, curr_addr, bytes, &next_addr);
-            if (numBytes < 0) {
-                numBytes = 0;
-            }
+            handleDown(&curr_addr);
             down_asm = false;
         }
-
-        wait_print_hex(curr_addr);
-        wait_print(": ");
+        // display current instruction state
+        wait_print("\033[2J"); // clear screen command
+        wait_print("\033[H"); // home cursor command
         if (show_asm) {
-            wait_print(assembly);
+            displayAsm(curr_addr);
         } else {
-            unsigned int i;
-            for (i = 0; i < numBytes; i++) {
-                wait_print_hex(bytes[i]);
-                wait_print(" ");
-            }
+            displayBin(curr_addr);
         }
         update = false;
     }
-
-    releaseCPU();
-    releaseDevice();
-    releaseFSM();
 }
