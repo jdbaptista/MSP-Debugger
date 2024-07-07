@@ -74,50 +74,48 @@ interrupt void button_irq(void) {
     return;
 }
 
+/***
+ * Performs button debouncing logic. Meant to be used inside
+ * the timer interrupt handler. The system works as follows:
+ * 1. GPIO button interrupt occurs and latch is now true.
+ * 2. Timer interrupt occurs and wait is now true, latch false.
+ * 3. Bounce GPIO button interrupt occurs, and latch is true.
+ * 4. Timer interrupt occurs, both wait and latch are true, so
+ *    a bounce must have occurred and latch is set to false.
+ * 5. Timer interrupt occurs, wait is true and latch is false,
+ *    so a button steady state has been reached and out is set.
+ *
+ * Returns: True if out is set, false otherwise. Should be used
+ *          to set update true so that main continues.
+ */
+inline bool update_button(bool *latch, bool *wait, bool *out) {
+    if (*latch) {
+        *latch = false;
+        *wait = true; // either already true, or initial latch
+    } else if (*wait) {
+        // no bounce has occurred
+        *out = true;
+        *wait = false;
+        return true;
+    }
+    return false;
+}
+
 #pragma vector=TIMER0_A1_VECTOR
 interrupt void timer_debounce_irq(void) {
     if (!(TA0IV & TA0IV_TAIFG)) {
         return; // automatically removes highest ifg
     }
-    if (latch_up && wait_up) {
-        latch_up = false;
-    } else if (wait_up) {
-        up_asm = true;
-        update = true;
-        wait_up = false;
-    } else if (latch_up) {
-        wait_up = true;
-        latch_up = false;
-    }
-    if (latch_down && wait_down) {
-        latch_down = false;
-    } else if (wait_down) {
-        down_asm = true;
-        update = true;
-        wait_down = false;
-    } else if (latch_down) {
-        wait_down = true;
-        latch_down = false;
-    }
-    if (latch_jump && wait_jump) {
-        latch_jump = false;
-    } else if (wait_jump) {
-        jump_asm = true;
-        update = true;
-        wait_jump = false;
-    } else if (latch_jump) {
-        wait_jump = true;
-        latch_jump = false;
-    }
-    if (latch_show && wait_show) {
+    update = update_button(&latch_up, &wait_up, &up_asm);
+    update |= update_button(&latch_down, &wait_down, &down_asm);
+    update |= update_button(&latch_jump, &wait_jump, &jump_asm);
+    if (latch_show) {
         latch_show = false;
+        wait_show = true; // either already true, or initial latch
     } else if (wait_show) {
         show_asm = (show_asm) ? false : true;
-        update = true;
         wait_show = false;
-    } else if (latch_show) {
-        wait_show = true;
-        latch_show = false;
+        update = true;
     }
     TA0IV = 0;
 }
@@ -173,6 +171,9 @@ int main(void)
     uint16_t bytes[3];
     int numBytes = 0;
     char assembly[31];
+    char assembly2[31];
+    char assembly3[31];
+    char assembly4[31];
     initButtons();
     initBackchannel();
     initFSM();
@@ -187,7 +188,7 @@ int main(void)
     update = true;
     while (true) {
         uart_wait();
-        while (!update) {}
+        while (!update) {} // TODO: implement sleep mode
 
         wait_print("\033[2J"); // clear screen command
         wait_print("\033[H"); // home cursor command
@@ -204,10 +205,34 @@ int main(void)
             jump_asm = false;
         }
         if (up_asm) {
-            // todo: implement logic
+            // iterate from beginning to find previous instruction
+            uint16_t prev_addr = 0xC000;
+            uint16_t temp_addr = 0;
+            while (prev_addr < curr_addr) {
+                temp_addr = nextInstrAddr(prev_addr, readMem(prev_addr));
+                if (temp_addr == 0) {
+                    // an error occurred, don't execute operation
+                    prev_addr = 0;
+                    break;
+                }
+                if (temp_addr == curr_addr) {
+                    // prev_addr is the correct previous instruction
+                    curr_addr = prev_addr;
+                    break;
+                }
+                prev_addr = temp_addr;
+            }
+            if (prev_addr != 0) {
+                bytes[0] = readMem(curr_addr);
+                bytes[1] = readMem(curr_addr + 2);
+                bytes[2] = readMem(curr_addr + 4);
+                numBytes = nextInstruction(assembly, curr_addr, bytes, &next_addr);
+            }
+
             up_asm = false;
         }
         if (down_asm) {
+            uart_wait(); // for debugging
             curr_addr = next_addr;
             bytes[0] = readMem(curr_addr);
             bytes[1] = readMem(curr_addr + 2);

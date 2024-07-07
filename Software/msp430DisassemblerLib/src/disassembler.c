@@ -23,6 +23,84 @@ inline void appendByteOp(char *result, bool isByteOp) {
     }
 }
 
+/**
+ * Returns 1 if the addressing mode consumes a byte,
+ * 0 otherwise.
+ *
+ * @param source: true if this is the source operand, false if this
+ *                is the destination operand.
+ * @param reg: the number of the register the operand is using.
+ * @param mode: the type of addressing mode the operand is using.
+ */
+uint16_t modeConsumesByte(bool source, uint16_t reg, addressingMode mode) {
+    switch (mode) {
+    case INDEXED:
+    {
+        if (reg == 3 && source) {
+            return 0;
+        }
+        return 1;
+    }
+    case AUTOINCREMENT:
+    {
+        if (reg == 0 && source) {
+            return 1;
+        } else {
+            return 0;
+        }
+    }
+    default:
+    {
+        return 0;
+    }
+    }
+}
+
+/**
+ * Returns the address of the next instruction.
+ *
+ * @param start_addr: The location in memory of the current instruction.
+ * @param byte_code: An array of 3 16-bit words corresponding to the memory
+ *                   beginning at start_addr. Remains unchanged.
+ *
+ * Returns: The address of the next instruction.
+ */
+uint16_t nextInstrAddr(uint16_t start_addr, uint16_t op_bytes) {
+    opCode op = getOpCode(op_bytes);
+    uint16_t bytes_consumed = 1; // consume opcode byte
+
+    switch (op.format) {
+    case DOUBLE:
+    {
+        addressingMode srcMode = getSourceRegisterMode(op_bytes, DOUBLE);
+        addressingMode destMode = getDestRegisterMode(op_bytes);
+        uint16_t srcReg = getSourceRegister(op_bytes, DOUBLE);
+        uint16_t destReg = getDestRegister(op_bytes);
+        bytes_consumed += modeConsumesByte(true, srcReg, srcMode);
+        bytes_consumed += modeConsumesByte(false, destReg, destMode);
+        break;
+    }
+    case SINGLE:
+    {
+        addressingMode srcMode = getSourceRegisterMode(op_bytes, SINGLE);
+        uint16_t srcReg = getSourceRegister(op_bytes, SINGLE);
+        bytes_consumed + modeConsumesByte(true, srcReg, srcMode);
+        break;
+    }
+    case JUMP:
+    {
+        // no extra bytes consumed
+        break;
+    }
+    default:
+    {
+        // an error occurred, return error address
+        return 0;
+    }
+    }
+    return start_addr + 2 * bytes_consumed;
+}
+
 
 /**
  * Fills result with the string assembly instruction of the instruction beginning at start_addr,
@@ -54,12 +132,13 @@ int nextInstruction(char *result, uint16_t start_addr, uint16_t *byte_code, uint
     case DOUBLE:
     {
         // handle emulated instructions
-        totWords = searchEmulated(result, op, start_addr, byte_code);
-        if (totWords > 0) { // emulated instruction found
-            break;
-        } else { // no emulated instruction found
-            totWords = 1;
-        }
+//        totWords = searchEmulated(result, op, start_addr, byte_code);
+//        if (totWords > 0) { // emulated instruction found
+//            break;
+//        } else { // no emulated instruction found
+//            totWords = 1;
+//        }
+        totWords = 1;
 
         addressingMode srcMode = getSourceRegisterMode(op_bytes, DOUBLE);
         addressingMode destMode = getDestRegisterMode(op_bytes);

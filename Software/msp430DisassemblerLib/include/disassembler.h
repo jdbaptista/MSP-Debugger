@@ -12,6 +12,7 @@
 #include "types.h"
 #include "masks.h"
 
+uint16_t nextInstrAddr(uint16_t start_addr, uint16_t op_bytes);
 int nextInstruction(char* result, uint16_t start_addr, uint16_t *byte_code, uint16_t *next_addr);
 int appendOperand(char* result, uint16_t pc, uint16_t reg, uint16_t word, addressingMode mode);
 int searchEmulated(char *result, opCode op, uint16_t start_addr, uint16_t *byte_code);
