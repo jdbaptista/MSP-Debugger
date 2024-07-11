@@ -38,7 +38,7 @@ void main(void)
 	}
 }
 ```
-The target is loaded with the assembled machine code for this program and placed in the MSP-Debugger. Unfortunately, the display and USB to UART bridge are currently broken, so an MSP-FET (from any MSP430 development board) is connected to the JTAG header of the debugger. The MSP-FET's backchannel UART to USB bridge is used to convey instructions to the user, operating at** 9600 baud with an 8-bit frame, no parity bit, and importantly 2 stop bits** (for data integrity). The UART encoding is ISO-8859-1, which is the default in CCS. Immediately after RESET the following instruction are extracted from the target and displayed.
+The target is loaded with the assembled machine code for this program and placed in the MSP-Debugger. Unfortunately, the display and USB to UART bridge are currently broken, so an MSP-FET (from any MSP430 development board) is connected to the JTAG header of the debugger. The MSP-FET's backchannel UART to USB bridge is used to convey instructions to the user, operating at **9600 baud with an 8-bit frame, no parity bit, and importantly 2 stop bits** (for data integrity). The UART encoding is ISO-8859-1, which is the default in CCS. Immediately after RESET the following instruction are extracted from the target and displayed.
 ```
 0xC000: SUB.B #2 SP <
 0xC002: MOV.B #0x5A80 &0x0120
