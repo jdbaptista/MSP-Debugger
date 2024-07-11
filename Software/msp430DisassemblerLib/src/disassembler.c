@@ -128,7 +128,7 @@ int nextAddress(uint16_t *next_addr, Instruction *instr) {
  */
 bool getInstruction(char *buffer, Instruction *instr) {
     addressingMode srcMode, destMode;
-    uint16_t srcReg, destReg;
+    uint16_t srcReg, destReg, destWord;
     char pcNewStr[7];
     bool isByteOp;
     opCode op;
@@ -151,7 +151,8 @@ bool getInstruction(char *buffer, Instruction *instr) {
         // append destination operand
         destMode = getDestRegisterMode(instr->operator);
         destReg = getDestRegister(instr->operator);
-        if (!appendOperand(buffer, instr->address, destReg, instr->destination, destMode)) {
+        destWord = (modeConsumesByte(true, srcReg, srcMode)) ? instr->destination : instr->source;
+        if (!appendOperand(buffer, instr->address, destReg, destWord, destMode)) {
             strcpy(buffer, "ERROR");
             return false;
         }

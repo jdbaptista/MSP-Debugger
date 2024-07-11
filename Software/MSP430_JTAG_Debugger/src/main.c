@@ -235,15 +235,18 @@ void displayBin(uint16_t addr) {
         }
         if (encodingLength >= 1) {
             wait_print_hex(instr.operator);
+            wait_print(" ");
         }
         if (encodingLength >= 2) {
             wait_print_hex(instr.source);
+            wait_print(" ");
         }
         if (encodingLength >= 3) {
             wait_print_hex(instr.destination);
+            wait_print(" ");
         }
         if (i == 4) {
-            wait_print(" <");
+            wait_print("<");
         }
         wait_print("\033[E"); // newline command
         nextAddress(&(instr.address), &instr);
