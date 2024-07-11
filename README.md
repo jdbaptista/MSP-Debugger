@@ -38,7 +38,7 @@ void main(void)
 	}
 }
 ```
-The target is loaded with the assembled machine code for this program and placed in the MSP-Debugger. Unfortunately, the display and USB to UART bridge are currently broken, so an MSP-FET (from any MSP430 development board) is connected to the JTAG header of the debugger. The MSP-FET's backchannel UART to USB bridge is used to convey instructions to the user, operating at 9600 baud with an 8-bit frame, no parity bit, and importantly 2 stop bits (for data integrity). The UART encoding is ISO-8859-1, which is the default in CCS. Immediately after RESET the following instruction are extracted from the target and displayed.
+The target is loaded with the assembled machine code for this program and placed in the MSP-Debugger. Unfortunately, the display and USB to UART bridge are currently broken, so an MSP-FET (from any MSP430 development board) is connected to the JTAG header of the debugger. The MSP-FET's backchannel UART to USB bridge is used to convey instructions to the user, operating at** 9600 baud with an 8-bit frame, no parity bit, and importantly 2 stop bits** (for data integrity). The UART encoding is ISO-8859-1, which is the default in CCS. Immediately after RESET the following instruction are extracted from the target and displayed.
 ```
 0xC000: SUB.B #2 SP <
 0xC002: MOV.B #0x5A80 &0x0120
@@ -63,7 +63,7 @@ Using the **BIN <-> ASM** button switches the display from assembly to machine c
 ```
 In this view it can be seen that the instruction to suspend the watchdog takes 3 words, ie. 48 bits, to encode. This is because the `MOV` instruction is a double operand instruction type and the opcode `0x40B2` specifies immediate mode for the first operand, which stores the immediate in the second word, and absolute mode for the second operand, which stores its address in the third word. These modes are internally specified by indirect autoincrement mode with the PC register and indexed mode with the SR register, respectively.
 
-The while loop on line 1 should correspond to a jump instruction somewhere in memory, which navigate forward to discover.
+The while loop on line 1 should correspond to a jump instruction somewhere in memory, which we navigate forward to discover.
 ```
 0xC01A: JEQ 0xC00C <
 0xC01C: SUB.B #1 0x0000(SP)
