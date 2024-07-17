@@ -38,9 +38,12 @@ uint16_t getDestRegister(uint16_t byteCode);
 uint16_t getSourceRegister(uint16_t byteCode, formatType type);
 inline bool isByteOperation(uint16_t byteCode);
 uint16_t getJumpLocation(uint16_t byteCode, uint16_t currAddress);
+uint16_t getCallLocation(uint16_t byteCode, uint16_t srcOffset, uint16_t currAddress);
+bool isCall(opCode *op);
 void byteCodeToOffset(char* result, uint16_t byteCode);
 void parseRegisterNum(char* result, uint16_t regNum);
 void uintToHex(char* result, uint16_t input);
+
 
 // order matters!
 static const opCode CODES[] = {

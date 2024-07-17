@@ -514,6 +514,35 @@ uint16_t getJumpLocation(uint16_t byteCode, uint16_t currAddress) {
     }
 }
 
+uint16_t getCallLocation(uint16_t byteCode, uint16_t srcOffset, uint16_t currAddress) {
+    addressingMode srcMode;
+    uint16_t srcReg;
+
+    srcMode = getSourceRegisterMode(byteCode, SINGLE);
+    srcReg = getSourceRegister(byteCode, SINGLE);
+    switch (srcMode) {
+    case INDEXED:
+        if (srcReg == 0) {
+            return srcOffset + currAddress;
+        }
+        break;
+    case AUTOINCREMENT:
+        return srcOffset;
+    default:
+        break;
+    }
+    return 0;
+}
+
+/**
+ * Determines whether the opcode corresponds to a call
+ * instruction. This is necessary to avoid importing
+ * masks.h in user code.
+ */
+bool isCall(opCode *op) {
+    return op->mask == CALL_MASK;
+}
+
 /**
  * Converts 16-bit byte code to an offset formatted string. Used when addressing
  * mode is indexed, so the next word is the offset.
@@ -554,4 +583,8 @@ void uintToHex(char* result, uint16_t input) {
     result[5] = map[input & 0x000F];
     result[6] = '\0';
 }
+
+
+
+
 

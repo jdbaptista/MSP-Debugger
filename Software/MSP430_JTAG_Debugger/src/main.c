@@ -157,16 +157,20 @@ inline void initBackchannel() {
 }
 
 void handleJump(uint16_t *curr_addr) {
-    uint16_t jump_addr, operator;
+    uint16_t jump_addr, operator, src_bytes;
     opCode opcode;
 
     operator = readMem(*curr_addr);
     opcode = getOpCode(operator);
+    jump_addr = 0;
     if (opcode.format == JUMP) {
         jump_addr = getJumpLocation(operator, *curr_addr);
-        if (jump_addr >= 0xC000 && jump_addr < 0xFFFF) {
-            *curr_addr = jump_addr;
-        }
+    } else if (isCall(&opcode)) {
+        src_bytes = readMem(*curr_addr + 2);
+        jump_addr = getCallLocation(operator, src_bytes, *curr_addr);
+    }
+    if (jump_addr != 0 && jump_addr >= 0xC000 && jump_addr < 0xFFFF) {
+        *curr_addr = jump_addr;
     }
 }
 
