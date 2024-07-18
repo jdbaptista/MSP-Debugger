@@ -24,7 +24,6 @@
 #define DOWN_BTN (BIT7)
 #define BUTTONS (HEX_BTN + JMP_BTN + UP_BTN + DOWN_BTN)
 
-static bool update = false;
 static bool up_asm = false;
 static bool down_asm = false;
 static bool show_asm = true;
@@ -52,25 +51,18 @@ interrupt void button_irq(void) {
     if (BTN_IFG & HEX_BTN) {
         latch_show = true;
         BTN_IFG &= ~HEX_BTN;
-        return;
-    }
-    if (BTN_IFG & JMP_BTN) {
+    } else if (BTN_IFG & JMP_BTN) {
         latch_jump = true;
         BTN_IFG &= ~JMP_BTN;
-        return;
-    }
-    if (BTN_IFG & DOWN_BTN) {
+    } else if (BTN_IFG & DOWN_BTN) {
         latch_down = true;
         BTN_IFG &= ~DOWN_BTN;
-        return;
-    }
-    if (BTN_IFG & UP_BTN) {
+    } else if (BTN_IFG & UP_BTN) {
         latch_up = true;
         BTN_IFG &= ~UP_BTN;
-        return;
+    } else {
+        BTN_IFG &= ~BUTTONS;
     }
-    // default case
-    BTN_IFG &= ~BUTTONS;
     return;
 }
 
@@ -103,7 +95,12 @@ inline bool update_button(bool *latch, bool *wait, bool *out) {
 
 #pragma vector=TIMER0_A1_VECTOR
 interrupt void timer_debounce_irq(void) {
-    if (!(TA0IV & TA0IV_TAIFG)) {
+    bool update = false;
+
+    __no_operation();
+    __no_operation();
+    __no_operation();
+    if (TA0IV & TA0IV_TAIFG != 0x000A) {
         return; // automatically removes highest ifg
     }
     update = update_button(&latch_up, &wait_up, &up_asm);
@@ -116,6 +113,10 @@ interrupt void timer_debounce_irq(void) {
         show_asm = (show_asm) ? false : true;
         wait_show = false;
         update = true;
+    }
+    // return to Active Mode if an update should occur
+    if (update) {
+        __bic_SR_register_on_exit(SCG0 | SCG1 | CPUOFF);
     }
     TA0IV = 0;
 }
@@ -132,12 +133,15 @@ inline void initButtons() {
     BTN_IE |= BUTTONS;
 
     // setup timer A0 for debouncing
-    TA0CTL &= ~TASSEL0; // select ACLK source
-    TA0CTL |= TASSEL1;
+    BCSCTL3 &= ~BIT4; // source ACLK from VLOCLK (12kHz)
+    BCSCTL3 |= BIT5;
+    TA0CTL &= ~TASSEL1; // select ACLK source
+    TA0CTL |= TASSEL0;
     TA0CTL |= ID0; // select input divider 2
     TA0CTL &= ~ID1;
-    TA0CTL &= ~MC0; // select continuous mode
-    TA0CTL |= MC1;
+    TACCR0 = 0x00FF;
+    TA0CTL &= ~MC1; // select up mode
+    TA0CTL |= MC0;
     TA0CCTL0 &= ~(CM0 + CM1); // disable CC interrupts
     TA0CCTL1 &= ~(CM0 + CM1);
     TA0CCTL2 &= ~(CM0 + CM1);
@@ -278,9 +282,7 @@ int main(void)
     haltCPU();
 
     curr_addr = 0xC000; // TODO: replace with address from reset vector
-    update = true;
     while (true) {
-        while (!update) {} // TODO: implement sleep mode
         if (jump_asm) {
             handleJump(&curr_addr);
             jump_asm = false;
@@ -301,6 +303,10 @@ int main(void)
         } else {
             displayBin(curr_addr);
         }
-        update = false;
+
+        // go to sleep until woken from timer interrupt
+        uart_wait(); // finish sending uart data
+        __bis_SR_register(GIE);
+        __bis_SR_register(SCG0 | SCG1 | CPUOFF); // LPM3 until GPIO interrupt
     }
 }
