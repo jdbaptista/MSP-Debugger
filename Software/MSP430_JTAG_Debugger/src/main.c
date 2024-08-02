@@ -7,111 +7,50 @@
 #include "jtag_fsm.h"
 #include "jtag_control.h"
 #include "disassembler.h"
-
-#define BTN_VECT (PORT2_VECTOR)
-#define BTN_IN   (P2IN)
-#define BTN_OUT  (P2OUT)
-#define BTN_DIR  (P2DIR)
-#define BTN_IFG  (P2IFG)
-#define BTN_IES  (P2IES)
-#define BTN_IE   (P2IE)
-#define BTN_SEL  (P2SEL)
-#define BTN_SEL2 (P2SEL2)
-#define BTN_REN  (P2REN)
-#define HEX_BTN  (BIT4)
-#define JMP_BTN  (BIT5)
-#define UP_BTN   (BIT6)
-#define DOWN_BTN (BIT7)
-#define BUTTONS (HEX_BTN + JMP_BTN + UP_BTN + DOWN_BTN)
-
-static bool up_asm = false;
-static bool down_asm = false;
-static bool show_asm = true;
-static bool jump_asm = false;
-
-static bool wait_up = false;
-static bool wait_down = false;
-static bool wait_show = false;
-static bool wait_jump = false;
-
-// These are necessary for the timer to
-// know when to begin waiting. If latch
-// is true while wait is true, then the
-// switch was bouncing. Otherwise, if
-// wait is true and latch is false, then
-// the button was successfully pressed and
-// the signal is sent to the main routine.
-static bool latch_up = false;
-static bool latch_down = false;
-static bool latch_show = false;
-static bool latch_jump = false;
+#include "buttons.h"
 
 #pragma vector=BTN_VECT
 interrupt void button_irq(void) {
     if (BTN_IFG & HEX_BTN) {
-        latch_show = true;
+        set_button_latch(SHOW_BTN);
         BTN_IFG &= ~HEX_BTN;
     } else if (BTN_IFG & JMP_BTN) {
-        latch_jump = true;
+        set_button_latch(JUMP_BTN);
         BTN_IFG &= ~JMP_BTN;
-    } else if (BTN_IFG & DOWN_BTN) {
-        latch_down = true;
-        BTN_IFG &= ~DOWN_BTN;
-    } else if (BTN_IFG & UP_BTN) {
-        latch_up = true;
-        BTN_IFG &= ~UP_BTN;
+    } else if (BTN_IFG & DOWN_BTN_IFG) {
+        set_button_latch(DOWN_BTN);
+        BTN_IFG &= ~DOWN_BTN_IFG;
+    } else if (BTN_IFG & UP_BTN_IFG) {
+        set_button_latch(UP_BTN);
+        BTN_IFG &= ~UP_BTN_IFG;
     } else {
         BTN_IFG &= ~BUTTONS;
     }
     return;
 }
 
-/***
- * Performs button debouncing logic. Meant to be used inside
- * the timer interrupt handler. The system works as follows:
- * 1. GPIO button interrupt occurs and latch is now true.
- * 2. Timer interrupt occurs and wait is now true, latch false.
- * 3. Bounce GPIO button interrupt occurs, and latch is true.
- * 4. Timer interrupt occurs, both wait and latch are true, so
- *    a bounce must have occurred and latch is set to false.
- * 5. Timer interrupt occurs, wait is true and latch is false,
- *    so a button steady state has been reached and out is set.
- *
- * Returns: True if out is set, false otherwise. Should be used
- *          to set update true so that main continues.
- */
-inline bool update_button(bool *latch, bool *wait, bool *out) {
-    if (*latch) {
-        *latch = false;
-        *wait = true; // either already true, or initial latch
-    } else if (*wait) {
-        // no bounce has occurred
-        *out = true;
-        *wait = false;
-        return true;
-    }
-    return false;
-}
-
 #pragma vector=TIMER0_A1_VECTOR
 interrupt void timer_debounce_irq(void) {
     bool update = false;
 
-    __no_operation();
-    __no_operation();
-    __no_operation();
     if (TA0IV & TA0IV_TAIFG != 0x000A) {
         return; // automatically removes highest ifg
     }
-    update = update_button(&latch_up, &wait_up, &up_asm);
-    update |= update_button(&latch_down, &wait_down, &down_asm);
-    update |= update_button(&latch_jump, &wait_jump, &jump_asm);
-    if (latch_show) {
-        latch_show = false;
-        wait_show = true; // either already true, or initial latch
-    } else if (wait_show) {
-        show_asm = (show_asm) ? false : true;
-        wait_show = false;
+    update = update_button(JUMP_BTN);
+    update |= update_button(UP_BTN);
+    update |= update_button(DOWN_BTN);
+    // update latch button with a special cmd
+    if (button_latch_set(SHOW_BTN)) {
+        clr_button_latch(SHOW_BTN);
+        set_button_wait(SHOW_BTN);
+    } else {
+        // XOR (toggle) the show button
+        if (button_cmd_set(SHOW_BTN)) {
+            clr_button_cmd(SHOW_BTN);
+        } else {
+            set_button_cmd(SHOW_BTN);
+        }
+        clr_button_wait(SHOW_BTN);
         update = true;
     }
     // return to Active Mode if an update should occur
@@ -122,6 +61,10 @@ interrupt void timer_debounce_irq(void) {
 }
 
 inline void initButtons() {
+    // clear button debouncing logic flags
+    clr_buttons();
+
+    // set GPIO pin registers for buttons
     BTN_SEL &= ~BUTTONS;
     BTN_SEL2 &= ~BUTTONS;
     BTN_OUT &= ~BUTTONS;
@@ -203,12 +146,12 @@ void handleDown(uint16_t *curr_addr) {
     nextAddress(curr_addr, &instr);
 }
 
-void displayAsm(uint16_t addr) {
+void displayAsm(uint16_t curr_addr) {
     Instruction instr;
     char buffer[31];
     uint16_t i;
 
-    instr.address = addr;
+    instr.address = curr_addr;
     for (i = 4; i > 0; i--) {
         instr.operator = readMem(instr.address);
         instr.source = readMem(instr.address + 2);
@@ -225,12 +168,12 @@ void displayAsm(uint16_t addr) {
     }
 }
 
-void displayBin(uint16_t addr) {
+void displayBin(uint16_t curr_addr) {
     int encodingLength;
     Instruction instr;
     uint16_t i;
 
-    instr.address = addr;
+    instr.address = curr_addr;
     for (i = 4; i > 0; i--) {
         instr.operator = readMem(instr.address);
         instr.source = readMem(instr.address + 2);
@@ -244,14 +187,14 @@ void displayBin(uint16_t addr) {
         if (encodingLength >= 1) {
             wait_print_hex(instr.operator);
             wait_print(" ");
-        }
-        if (encodingLength >= 2) {
-            wait_print_hex(instr.source);
-            wait_print(" ");
-        }
-        if (encodingLength >= 3) {
-            wait_print_hex(instr.destination);
-            wait_print(" ");
+            if (encodingLength >= 2) {
+                wait_print_hex(instr.source);
+                wait_print(" ");
+                if (encodingLength >= 3) {
+                    wait_print_hex(instr.destination);
+                    wait_print(" ");
+                }
+            }
         }
         if (i == 4) {
             wait_print("<");
@@ -277,28 +220,30 @@ int main(void)
     wait_print("\033[2J"); // clear screen command
     wait_print("\033[H"); // home cursor command
 
+    // take target under JTAG control
     initFSM();
     getDevice();
     haltCPU();
 
-    curr_addr = 0xC000; // TODO: replace with address from reset vector
+    curr_addr = 0xC000;
     while (true) {
         if (jump_asm) {
             handleJump(&curr_addr);
-            jump_asm = false;
+            clr_button_cmd(JUMP_BTN);
         }
         if (up_asm) {
             handleUp(&curr_addr);
+            clr_button_cmd(UP_BTN);
             up_asm = false;
         }
         if (down_asm) {
             handleDown(&curr_addr);
-            down_asm = false;
+            clr_button_cmd(DOWN_BTN);
         }
         // display current instruction state
         wait_print("\033[2J"); // clear screen command
         wait_print("\033[H"); // home cursor command
-        if (show_asm) {
+        if (button_cmd_set(SHOW_BTN)) {
             displayAsm(curr_addr);
         } else {
             displayBin(curr_addr);
