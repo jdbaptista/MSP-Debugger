@@ -22,15 +22,15 @@
  *      - USCI is in reset mode
  *      - USCI clock source is SMCLK
  */
-bool uart_config(void) {
+bool uartConfig(void) {
 #ifdef __MSP430G2553__
     // use calibrated DCO for more accurate clock
-    if (CALBC1_1MHZ==0xFF)                  // If calibration constant erased
+    if (CALBC1_1MHZ==0xFF)   // If calibration constant erased
     {
-        while(1);                               // do not load, trap CPU!!
+        while(1);            // do not load, trap CPU!!
     }
-    DCOCTL = 0;                               // Select lowest DCOx and MODx settings
-    BCSCTL1 = CALBC1_1MHZ;                    // Set DCO
+    DCOCTL = 0;              // Select lowest DCOx and MODx settings
+    BCSCTL1 = CALBC1_1MHZ;   // Set DCO
     DCOCTL = CALDCO_1MHZ;
 #endif
 
@@ -64,33 +64,33 @@ bool uart_config(void) {
     return 1;
 }
 
-inline void use_bc_uart_pins(void) {
+inline void useBCUartPins(void) {
 #ifdef __MSP430F5529__
     // backchannel uart pins on
     // msp-exp430f5529lp
     P4SEL |= 0x18;
-    P4DIR |= BIT4 + BIT5; //TODO: fix this
+    P4DIR |= BIT4 + BIT5;
 #endif
 
 #ifdef __MSP430G2553__
     P1SEL |= BIT1 + BIT2;
     P1SEL2 |= BIT1 + BIT2;
-    P1DIR |= BIT1 + BIT2; //TODO: fix this
+    P1DIR |= BIT1 + BIT2;
 #endif
 }
 
 
-inline void usci_reset(void) {
+inline void usciReset(void) {
     BCCTL1 |= UCSWRST;
 }
 
 
-inline void usci_start(void) {
+inline void usciStart(void) {
     BCCTL1 &= ~UCSWRST;
 }
 
 
-inline void enable_uart_tx_interrupt(void) {
+inline void enableUartTXInterrupt(void) {
 #ifdef __MSP430F5529__
     BCIE |= UCTXIE;
 #endif
@@ -100,7 +100,7 @@ inline void enable_uart_tx_interrupt(void) {
 }
 
 
-inline void disable_uart_tx_interrupt(void) {
+inline void disableUartTXInterrupt(void) {
 #ifdef __MSP430F5529__
     BCIE &= ~UCTXIE;
 #endif
@@ -110,7 +110,7 @@ inline void disable_uart_tx_interrupt(void) {
 }
 
 
-inline void enable_uart_rx_interrupt(void) {
+inline void enableUartRXInterrupt(void) {
 #ifdef __MSP430F5529__
     BCIE |= UCRXIE;
 #endif
@@ -120,7 +120,7 @@ inline void enable_uart_rx_interrupt(void) {
 }
 
 
-inline void disable_uart_rx_interrupt(void) {
+inline void disableUartRXInterrupt(void) {
 #ifdef __MSP430F5529__
     BCIE &= ~UCRXIE;
 #endif
@@ -129,7 +129,7 @@ inline void disable_uart_rx_interrupt(void) {
 #endif
 }
 
-inline void clear_uart_tx_interrupt_flag(void) {
+inline void clearUartTXInterruptFlag(void) {
 #ifdef __MSP430F5529__
     BCIFG &= ~UCTXIFG;
 #endif
@@ -139,7 +139,7 @@ inline void clear_uart_tx_interrupt_flag(void) {
 #endif
 }
 
-inline void clear_uart_rx_interrupt_flag(void) {
+inline void clearUartRXInterruptFlag(void) {
 #ifdef __MSP430F5529__
     BCIFG &= ~UCRXIFG;
 #endif
@@ -150,7 +150,7 @@ inline void clear_uart_rx_interrupt_flag(void) {
 }
 
 
-bool uart_send_char(char input) {
+bool uartSendChar(char input) {
     unsigned char reset_high = BCCTL1 & UCSWRST;
     if (reset_high) {
         return 0;
@@ -167,15 +167,15 @@ static int curr_bc_buffer_ndx = -1; // -1 indicates no current string transmissi
                                     // otherwise indicates the index of the
                                     // previously transmitted character.
 #pragma vector=BC_INT_VEC
-interrupt void bc_uart_irq(void) {
+interrupt void bcUartIRQ(void) {
 #ifdef __MSP430F5529__
    switch(__even_in_range(BCIV, 4)) {
        case 0: break; // no interrupt
        case 2: // data recieved
-           clear_uart_rx_interrupt_flag();
+           clearUartRXInterruptFlag();
            break;
        case 4: // tx buffer empty
-           clear_uart_tx_interrupt_flag();
+           clearUartTXInterruptFlag();
            if (curr_bc_buffer_ndx < 0) {
                break;
            } else if (bc_buffer[curr_bc_buffer_ndx + 1] == 0) {
@@ -190,7 +190,7 @@ interrupt void bc_uart_irq(void) {
    }
 #endif
 #ifdef __MSP430G2553__
-   clear_uart_tx_interrupt_flag();
+   clearUartTXInterruptFlag();
    if (bc_buffer[curr_bc_buffer_ndx + 1] == 0) {
        curr_bc_buffer_ndx = -1;
    } else {
@@ -235,7 +235,7 @@ bool print(char *input) {
  * where ABCD is the hexadecimal
  * representation of the input.
  */
-bool print_hex(uint16_t input) {
+bool printHex(uint16_t input) {
     const char ascii_table[] = {
                                 '0', '1', '2', '3', '4', '5', '6', '7',
                                 '8', '9', 'A', 'B', 'C', 'D', 'E', 'F',
@@ -266,7 +266,7 @@ bool print_hex(uint16_t input) {
     return 1;
 }
 
-bool print_binary(uint16_t input) {
+bool printBinary(uint16_t input) {
     unsigned char reset_high = BCCTL1 & UCSWRST;
     if (curr_bc_buffer_ndx != -1 || reset_high) {
         return 0; // transmission already in progress or peripheral off
@@ -294,22 +294,22 @@ bool print_binary(uint16_t input) {
 /***
  * Polls the backchannel until done transmitting.
  */
-inline void wait_print(char *input) {
+inline void waitPrint(char *input) {
     while (!print(input)) {}
 }
 
-void wait_print_hex(uint16_t input) {
-    while (!print_hex(input)) {}
+void waitPrintHex(uint16_t input) {
+    while (!printHex(input)) {}
 }
 
-void wait_print_binary(uint16_t input) {
-    while (!print_binary(input)) {}
+void waitPrintBinary(uint16_t input) {
+    while (!printBinary(input)) {}
 }
 
 /**
  * Polls the backchannel until done transmitting
  */
-void uart_wait(void) {
+void waitUart(void) {
     while (curr_bc_buffer_ndx != -1) {}
 }
 

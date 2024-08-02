@@ -369,31 +369,31 @@ int searchEmulated(char *result, opCode *op, uint16_t start_addr, uint16_t *byte
     }
     case MOV_MASK:
     {
-        break;
+        break; // TODO: Handle Emulated Instruction
     }
     case BIC_MASK:
     {
-        break;
+        break; // TODO: Handle Emulated Instruction
     }
     case BIS_MASK:
     {
-        break;
+        break; // TODO: Handle Emulated Instruction
     }
     case DADD_MASK:
     {
-        break;
+        break; // TODO: Handle Emulated Instruction
     }
     case SUB_MASK:
     {
-        break;
+        break; // TODO: Handle Emulated Instruction
     }
     case SUBC_MASK:
     {
-        break;
+        break; // TODO: Handle Emulated Instruction
     }
     case XOR_MASK:
     {
-        break;
+        break; // TODO: Handle Emulated Instruction
     }
     case CMP_MASK:
     {

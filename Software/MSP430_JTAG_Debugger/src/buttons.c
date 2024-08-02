@@ -9,6 +9,8 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#include "buttons.h"
+
 /* The lowest 12 bits of the integer correspond
  * to various button debouncing flags. Specifically:
  * Bit 0: up_asm, Bit 1: down_asm, Bit 2: show_asm, Bit 3: jump_asm,
@@ -31,24 +33,24 @@ static uint16_t button_bits;
  * Returns: True if out is set to true during this function,
  *          false otherwise. Should be used to wake up main.
  */
-inline bool update_button(enum Button button) {
-    if (button_latch_set(button)) {
-        clr_button_latch(button);
-        set_button_wait(button); // either already true, or initial latch
-    } else if (button_wait_set(button)) {
+bool updateButton(enum Button button) {
+    if (isButtonLatchSet(button)) {
+        clrButtonLatch(button);
+        setButtonWait(button);  // either already true, or initial latch
+    } else if (isButtonWaitSet(button)) {
         // no bounce has occurred
-        set_button_cmd(button);
-        clr_button_wait(button);
+        setButtonCmd(button);
+        clrButtonWait(button);
         return true;
     }
     return false;
 }
 
-inline void clr_buttons() {
+void clrButtons() {
     button_bits = 0;
 }
 
-bool button_cmd_set(enum Button button) {
+bool isButtonCmdSet(enum Button button) {
     switch (button) {
     case UP_BTN:
         return button_bits & 0x0001;
@@ -63,7 +65,7 @@ bool button_cmd_set(enum Button button) {
     }
 }
 
-void set_button_cmd(enum Button button) {
+void setButtonCmd(enum Button button) {
     switch (button) {
     case UP_BTN:
         button_bits |= 0x0001;
@@ -82,26 +84,26 @@ void set_button_cmd(enum Button button) {
     }
 }
 
-void clr_button_cmd(enum Button button) {
+void clrButtonCmd(enum Button button) {
     switch (button) {
     case UP_BTN:
-        button_bits &= 0x0001;
+        button_bits &= ~0x0001;
         break;
     case DOWN_BTN:
-        button_bits &= 0x0002;
+        button_bits &= ~0x0002;
         break;
     case SHOW_BTN:
-        button_bits &= 0x0004;
+        button_bits &= ~0x0004;
         break;
     case JUMP_BTN:
-        button_bits &= 0x0008;
+        button_bits &= ~0x0008;
         break;
     default:
         break;
     }
 }
 
-bool button_wait_set(enum Button button) {
+bool isButtonWaitSet(enum Button button) {
     switch (button) {
     case UP_BTN:
         return button_bits & 0x0010;
@@ -116,7 +118,7 @@ bool button_wait_set(enum Button button) {
     }
 }
 
-void set_button_wait(enum Button button) {
+void setButtonWait(enum Button button) {
     switch (button) {
     case UP_BTN:
         button_bits |= 0x0010;
@@ -135,26 +137,26 @@ void set_button_wait(enum Button button) {
     }
 }
 
-void clr_button_wait(enum Button button) {
+void clrButtonWait(enum Button button) {
     switch (button) {
     case UP_BTN:
-        button_bits |= 0x0010;
+        button_bits &= ~0x0010;
         break;
     case DOWN_BTN:
-        button_bits |= 0x0020;
+        button_bits &= ~0x0020;
         break;
     case SHOW_BTN:
-        button_bits |= 0x0040;
+        button_bits &= ~0x0040;
         break;
     case JUMP_BTN:
-        button_bits |= 0x0080;
+        button_bits &= ~0x0080;
         break;
     default:
         break;
     }
 }
 
-bool button_latch_set(enum Button button) {
+bool isButtonLatchSet(enum Button button) {
     switch (button) {
     case UP_BTN:
         return button_bits & 0x0100;
@@ -169,7 +171,7 @@ bool button_latch_set(enum Button button) {
     }
 }
 
-void set_button_latch(enum Button button) {
+void setButtonLatch(enum Button button) {
     switch (button) {
     case UP_BTN:
         button_bits |= 0x0100;
@@ -188,19 +190,19 @@ void set_button_latch(enum Button button) {
     }
 }
 
-void clr_button_latch(enum Button button) {
+void clrButtonLatch(enum Button button) {
     switch (button) {
     case UP_BTN:
-        button_bits &= 0x0100;
+        button_bits &= ~0x0100;
         break;
     case DOWN_BTN:
-        button_bits &= 0x0200;
+        button_bits &= ~0x0200;
         break;
     case SHOW_BTN:
-        button_bits &= 0x0400;
+        button_bits &= ~0x0400;
         break;
     case JUMP_BTN:
-        button_bits &= 0x0800;
+        button_bits &= ~0x0800;
         break;
     default:
         break;

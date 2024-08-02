@@ -11,23 +11,23 @@
 
 #include "bc_uart.h"
 
-bool run_test(bool (*test)(), char* test_name) {
-    uart_wait();
+bool runTest(bool (*test)(), char* test_name) {
+    waitUart();
     bool result = test();
-    wait_print(test_name);
+    waitPrint(test_name);
     if (result) {
-        wait_print(" passed.");
+        waitPrint(" passed.");
     } else {
-        wait_print(" failed.");
+        waitPrint(" failed.");
     }
-    wait_print("\033[E"); // newline command
+    waitPrint("\033[E"); // newline command
     return result;
 }
 
-void run_tests(bool (*test_funcs[])(void), char* test_names[], unsigned int num_tests) {
+void runTests(bool (*test_funcs[])(void), char* test_names[], unsigned int num_tests) {
     unsigned int i;
     for(i = 0; i < num_tests; i++) {
-        run_test(test_funcs[i], test_names[i]);
+        runTest(test_funcs[i], test_names[i]);
     }
 }
 

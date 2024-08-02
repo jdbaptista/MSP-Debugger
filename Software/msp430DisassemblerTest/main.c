@@ -17,14 +17,14 @@
 inline void setup() {
     WDTCTL = WDTPW | WDTHOLD; // stop watchdog timer
     // setup backchannel at 9600 baud
-    usci_reset();
+    usciReset();
     // source UCSI from SMCLK
     BCCTL1 |= UCSSEL_3;
-    use_bc_uart_pins();
-    uart_config();
-    usci_start();
-    enable_uart_tx_interrupt();
-    clear_uart_tx_interrupt_flag();
+    useBCUartPins();
+    uartConfig();
+    usciStart();
+    enableUartTXInterrupt();
+    clearUartTXInterruptFlag();
     __bis_SR_register(GIE);
 }
 
@@ -34,6 +34,6 @@ inline void setup() {
 int main(void)
 {
     setup();
-    run_tests(test_funcs, test_names, sizeof(test_names)/sizeof(char*));
+    runTests(test_funcs, test_names, sizeof(test_names)/sizeof(char*));
     return 0;
 }

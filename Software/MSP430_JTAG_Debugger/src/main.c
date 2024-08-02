@@ -10,18 +10,20 @@
 #include "buttons.h"
 
 #pragma vector=BTN_VECT
-interrupt void button_irq(void) {
-    if (BTN_IFG & HEX_BTN) {
-        set_button_latch(SHOW_BTN);
-        BTN_IFG &= ~HEX_BTN;
-    } else if (BTN_IFG & JMP_BTN) {
-        set_button_latch(JUMP_BTN);
-        BTN_IFG &= ~JMP_BTN;
+interrupt void buttonIRQ(void) {
+    __bic_SR_register(GIE);
+    __bis_SR_register_on_exit(GIE);
+    if (BTN_IFG & HEX_BTN_IFG) {
+        setButtonLatch(SHOW_BTN);
+        BTN_IFG &= ~HEX_BTN_IFG;
+    } else if (BTN_IFG & JMP_BTN_IFG) {
+        setButtonLatch(JUMP_BTN);
+        BTN_IFG &= ~JMP_BTN_IFG;
     } else if (BTN_IFG & DOWN_BTN_IFG) {
-        set_button_latch(DOWN_BTN);
+        setButtonLatch(DOWN_BTN);
         BTN_IFG &= ~DOWN_BTN_IFG;
     } else if (BTN_IFG & UP_BTN_IFG) {
-        set_button_latch(UP_BTN);
+        setButtonLatch(UP_BTN);
         BTN_IFG &= ~UP_BTN_IFG;
     } else {
         BTN_IFG &= ~BUTTONS;
@@ -30,27 +32,29 @@ interrupt void button_irq(void) {
 }
 
 #pragma vector=TIMER0_A1_VECTOR
-interrupt void timer_debounce_irq(void) {
+interrupt void timerDebounceIRQ(void) {
+    __bic_SR_register(GIE);
+    __bis_SR_register_on_exit(GIE);
     bool update = false;
 
-    if (TA0IV & TA0IV_TAIFG != 0x000A) {
+    if (TA0IV & TA0IV_TAIFG != TA0IV_TAIFG) {
         return; // automatically removes highest ifg
     }
-    update = update_button(JUMP_BTN);
-    update |= update_button(UP_BTN);
-    update |= update_button(DOWN_BTN);
+    update = updateButton(JUMP_BTN);
+    update |= updateButton(UP_BTN);
+    update |= updateButton(DOWN_BTN);
     // update latch button with a special cmd
-    if (button_latch_set(SHOW_BTN)) {
-        clr_button_latch(SHOW_BTN);
-        set_button_wait(SHOW_BTN);
-    } else {
+    if (isButtonLatchSet(SHOW_BTN)) {
+        clrButtonLatch(SHOW_BTN);
+        setButtonWait(SHOW_BTN);
+    } else if (isButtonWaitSet(SHOW_BTN)) {
         // XOR (toggle) the show button
-        if (button_cmd_set(SHOW_BTN)) {
-            clr_button_cmd(SHOW_BTN);
+        if (isButtonCmdSet(SHOW_BTN)) {
+            clrButtonCmd(SHOW_BTN);
         } else {
-            set_button_cmd(SHOW_BTN);
+            setButtonCmd(SHOW_BTN);
         }
-        clr_button_wait(SHOW_BTN);
+        clrButtonWait(SHOW_BTN);
         update = true;
     }
     // return to Active Mode if an update should occur
@@ -62,7 +66,7 @@ interrupt void timer_debounce_irq(void) {
 
 inline void initButtons() {
     // clear button debouncing logic flags
-    clr_buttons();
+    clrButtons();
 
     // set GPIO pin registers for buttons
     BTN_SEL &= ~BUTTONS;
@@ -82,7 +86,8 @@ inline void initButtons() {
     TA0CTL |= TASSEL0;
     TA0CTL |= ID0; // select input divider 2
     TA0CTL &= ~ID1;
-    TACCR0 = 0x00FF;
+    TACCR0 = 0x02FF; // set the value to count up to
+                     // manually calibrated to remove debouncing
     TA0CTL &= ~MC1; // select up mode
     TA0CTL |= MC0;
     TA0CCTL0 &= ~(CM0 + CM1); // disable CC interrupts
@@ -94,13 +99,13 @@ inline void initButtons() {
 
 inline void initBackchannel() {
     // setup backchannel at 9600 baud, 2 stop bits
-    usci_reset();
+    usciReset();
     BCCTL1 |= UCSSEL_3; // set uart to use SMCLK
-    use_bc_uart_pins();
-    uart_config();
-    usci_start();
-    enable_uart_tx_interrupt();
-    clear_uart_tx_interrupt_flag();
+    useBCUartPins();
+    uartConfig();
+    usciStart();
+    enableUartTXInterrupt();
+    clearUartTXInterruptFlag();
 }
 
 void handleJump(uint16_t *curr_addr) {
@@ -156,14 +161,14 @@ void displayAsm(uint16_t curr_addr) {
         instr.operator = readMem(instr.address);
         instr.source = readMem(instr.address + 2);
         instr.destination = readMem(instr.address + 4);
-        wait_print_hex(instr.address);
-        wait_print(": ");
+        waitPrintHex(instr.address);
+        waitPrint(": ");
         getInstruction(buffer, &instr);
-        wait_print(buffer);
+        waitPrint(buffer);
         if (i == 4) {
-            wait_print(" <");
+            waitPrint(" <");
         }
-        wait_print("\033[E"); // newline command
+        waitPrint("\033[E"); // newline command
         nextAddress(&(instr.address), &instr);
     }
 }
@@ -178,28 +183,28 @@ void displayBin(uint16_t curr_addr) {
         instr.operator = readMem(instr.address);
         instr.source = readMem(instr.address + 2);
         instr.destination = readMem(instr.address + 4);
-        wait_print_hex(instr.address);
-        wait_print(": ");
+        waitPrintHex(instr.address);
+        waitPrint(": ");
         encodingLength = nextAddress(NULL, &instr);
         if (encodingLength == -1) {
             encodingLength = 1; // next address internally moves 1 word upon error
         }
         if (encodingLength >= 1) {
-            wait_print_hex(instr.operator);
-            wait_print(" ");
+            waitPrintHex(instr.operator);
+            waitPrint(" ");
             if (encodingLength >= 2) {
-                wait_print_hex(instr.source);
-                wait_print(" ");
+                waitPrintHex(instr.source);
+                waitPrint(" ");
                 if (encodingLength >= 3) {
-                    wait_print_hex(instr.destination);
-                    wait_print(" ");
+                    waitPrintHex(instr.destination);
+                    waitPrint(" ");
                 }
             }
         }
         if (i == 4) {
-            wait_print("<");
+            waitPrint("<");
         }
-        wait_print("\033[E"); // newline command
+        waitPrint("\033[E"); // newline command
         nextAddress(&(instr.address), &instr);
     }
 }
@@ -214,11 +219,12 @@ int main(void)
     WDTCTL = WDTPW | WDTHOLD; // stop watchdog timer
 
     initButtons();
+    setButtonCmd(SHOW_BTN); // indicates showing assembly
     initBackchannel();
 
     __bis_SR_register(GIE);
-    wait_print("\033[2J"); // clear screen command
-    wait_print("\033[H"); // home cursor command
+    waitPrint("\033[2J"); // clear screen command
+    waitPrint("\033[H"); // home cursor command
 
     // take target under JTAG control
     initFSM();
@@ -227,30 +233,33 @@ int main(void)
 
     curr_addr = 0xC000;
     while (true) {
-        if (jump_asm) {
+        if (isButtonCmdSet(JUMP_BTN)) {
             handleJump(&curr_addr);
-            clr_button_cmd(JUMP_BTN);
+            clrButtonCmd(JUMP_BTN);
         }
-        if (up_asm) {
+        if (isButtonCmdSet(UP_BTN)) {
             handleUp(&curr_addr);
-            clr_button_cmd(UP_BTN);
-            up_asm = false;
+            clrButtonCmd(UP_BTN);
         }
-        if (down_asm) {
+        if (isButtonCmdSet(DOWN_BTN)) {
             handleDown(&curr_addr);
-            clr_button_cmd(DOWN_BTN);
+            clrButtonCmd(DOWN_BTN);
         }
         // display current instruction state
-        wait_print("\033[2J"); // clear screen command
-        wait_print("\033[H"); // home cursor command
-        if (button_cmd_set(SHOW_BTN)) {
+        waitPrint("\033[2J"); // clear screen command
+        waitPrint("\033[H"); // home cursor command
+        if (isButtonCmdSet(SHOW_BTN)) {
             displayAsm(curr_addr);
         } else {
             displayBin(curr_addr);
         }
 
+        if (isButtonCmdSet(JUMP_BTN) || isButtonCmdSet(UP_BTN) || isButtonCmdSet(DOWN_BTN)) {
+            continue; // missing an interrupt, update again
+        }
+
         // go to sleep until woken from timer interrupt
-        uart_wait(); // finish sending uart data
+        waitUart(); // finish sending uart data
         __bis_SR_register(GIE);
         __bis_SR_register(SCG0 | SCG1 | CPUOFF); // LPM3 until GPIO interrupt
     }

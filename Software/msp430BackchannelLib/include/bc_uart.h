@@ -15,28 +15,28 @@
 #define BC_BUFFER_SIZE 128
 
 
-bool uart_config(void);
-inline void use_bc_uart_pins(void);
-inline void usci_reset(void);
-inline void usci_start(void);
+bool uartConfig(void);
+inline void useBCUartPins(void);
+inline void usciReset(void);
+inline void usciStart(void);
 
-inline void enable_uart_tx_interrupt(void);
-inline void disable_uart_tx_interrupt(void);
-inline void enable_uart_rx_interrupt(void);
-inline void disable_uart_rx_interrupt(void);
-inline void clear_uart_tx_interrupt_flag(void);
-inline void clear_uart_rx_interrupt_flag(void);
+inline void enableUartTXInterrupt(void);
+inline void disableUartTXInterrupt(void);
+inline void enableUartRXInterrupt(void);
+inline void disableUartRXInterrupt(void);
+inline void clearUartTXInterruptFlag(void);
+inline void clearUartRXInterruptFlag(void);
 
-bool uart_send_char(char input);
+bool uartSendChar(char input);
 
 #ifdef USE_BC_IRQ
 bool print(char *input);
-bool print_hex(uint16_t input);
-bool print_binary(uint16_t input);
-void wait_print(char *input);
-void wait_print_hex(uint16_t input);
-void wait_print_binary(uint16_t input);
-void uart_wait(void);
+bool printHex(uint16_t input);
+bool printBinary(uint16_t input);
+void waitPrint(char *input);
+void waitPrintHex(uint16_t input);
+void waitPrintBinary(uint16_t input);
+void waitUart(void);
 #endif
 
 

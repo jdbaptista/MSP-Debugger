@@ -15,16 +15,17 @@ enum Button {
     JUMP_BTN,
 };
 
-inline void clr_buttons();
-bool button_cmd_set(enum Button button);
-void set_button_cmd(enum Button button);
-void clr_button_cmd(enum Button button);
-bool button_wait_set(enum Button button);
-void set_button_wait(enum Button button);
-void clr_button_wait(enum Button button);
-bool buttion_latch_set(enum Button button);
-void set_button_latch(enum Button button);
-void clr_button_latch(enum Button button);
+bool updateButton(enum Button button);
+void clrButtons();
+bool isButtonCmdSet(enum Button button);
+void setButtonCmd(enum Button button);
+void clrButtonCmd(enum Button button);
+bool isButtonWaitSet(enum Button button);
+void setButtonWait(enum Button button);
+void clrButtonWait(enum Button button);
+bool isButtonLatchSet(enum Button button);
+void setButtonLatch(enum Button button);
+void clrButtonLatch(enum Button button);
 
 #define BTN_VECT (PORT2_VECTOR)
 #define BTN_IN   (P2IN)
@@ -40,6 +41,6 @@ void clr_button_latch(enum Button button);
 #define JMP_BTN_IFG  (BIT5)
 #define UP_BTN_IFG   (BIT6)
 #define DOWN_BTN_IFG (BIT7)
-#define BUTTONS (HEX_BTN + JMP_BTN + UP_BTN + DOWN_BTN)
+#define BUTTONS (HEX_BTN_IFG + JMP_BTN_IFG + UP_BTN_IFG + DOWN_BTN_IFG)
 
 #endif /* SRC_BUTTONS_H_ */
